@@ -1,0 +1,2 @@
+# core
+SpleefLeague Core plugin
