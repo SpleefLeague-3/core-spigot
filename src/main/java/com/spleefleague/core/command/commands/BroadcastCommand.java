@@ -7,13 +7,13 @@
 package com.spleefleague.core.command.commands;
 
 import com.spleefleague.core.Core;
-import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.command.annotation.CommandAnnotation;
 import com.spleefleague.core.command.annotation.HelperArg;
 import com.spleefleague.core.command.CoreCommand;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatBroadcast;
+import org.bukkit.command.CommandSender;
 
 /**
  * @author NickM13
@@ -23,7 +23,12 @@ public class BroadcastCommand extends CoreCommand {
     public BroadcastCommand() {
         super("broadcast", CoreRank.DEVELOPER);
         setUsage("/broadcast <message>");
-        setDescription("Send a message through the broadcast channel");
+        setDescription("Send a message through the broadcast channel. All servers receive this message.");
+    }
+
+    @CommandAnnotation
+    public void broadcast(CommandSender sender, @HelperArg(value = "title \\n subtitle") String message) {
+        Core.getInstance().sendPacket(new PacketSpigotChatBroadcast(message));
     }
 
     @CommandAnnotation
