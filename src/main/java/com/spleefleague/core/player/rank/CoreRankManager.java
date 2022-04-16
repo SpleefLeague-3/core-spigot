@@ -63,7 +63,7 @@ public class CoreRankManager extends RankManager<CoreRank> {
             sortedRanks.get(i).setPriority(i);
         }
 
-        Scoreboard mainScoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Scoreboard mainScoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getMainScoreboard();
         Set<Team> teams = mainScoreboard.getTeams();
         teams.forEach(Team::unregister);
         initScoreboard(mainScoreboard);

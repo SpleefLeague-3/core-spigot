@@ -44,7 +44,7 @@ public class CoreOfflinePlayer extends CoreDBPlayer {
 
     @DBField protected final CorePermanentRank permRank = new CorePermanentRank();
     @DBField protected final List<CoreTempRank> tempRanks = new ArrayList<>();
-    @DBField private Long lastOnline = -1L;
+    @DBField protected Long lastOnline = -1L;
     @DBField protected Long onlineTime = 0L;
     @DBField protected Long activeTime = 0L;
     @DBField protected Long battleTime = 0L;

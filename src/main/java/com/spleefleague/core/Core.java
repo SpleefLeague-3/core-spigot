@@ -6,6 +6,7 @@ import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.google.common.collect.Lists;
 import com.spleefleague.core.chat.Chat;
@@ -231,7 +232,7 @@ public class Core extends CorePlugin {
         return minigameServers;
     }
 
-    private static List<BukkitTask> taskList = new ArrayList<>();
+    private static final List<BukkitTask> taskList = new ArrayList<>();
 
     public void addTask(BukkitTask task) {
         taskList.add(task);
@@ -383,24 +384,19 @@ public class Core extends CorePlugin {
             public void onPacketSending(PacketEvent pe) {
                 if (pe.getPacketType() == PacketType.Play.Server.PLAYER_INFO) {
                     PacketContainer packet = pe.getPacket();
-                    switch (packet.getPlayerInfoAction().read(0)) {
-                        case REMOVE_PLAYER: {
-                            List<PlayerInfoData> newData = new ArrayList<>();
-                            for (PlayerInfoData playerInfoData : packet.getPlayerInfoDataLists().read(0)) {
-                                CoreOfflinePlayer cp = Core.getInstance().getPlayers().get(playerInfoData.getProfile().getUUID());
-                                if (cp == null || cp.getOnlineState() != DBPlayer.OnlineState.HERE) {
-                                    newData.add(playerInfoData);
-                                }
-                            }
-                            if (newData.isEmpty()) {
-                                pe.setCancelled(true);
-                            } else {
-                                packet.getPlayerInfoDataLists().write(0, newData);
+                    if (packet.getPlayerInfoAction().read(0) == EnumWrappers.PlayerInfoAction.REMOVE_PLAYER) {
+                        List<PlayerInfoData> newData = new ArrayList<>();
+                        for (PlayerInfoData playerInfoData : packet.getPlayerInfoDataLists().read(0)) {
+                            CoreOfflinePlayer cp = Core.getInstance().getPlayers().get(playerInfoData.getProfile().getUUID());
+                            if (cp == null || cp.getOnlineState() != DBPlayer.OnlineState.HERE) {
+                                newData.add(playerInfoData);
                             }
                         }
-                        break;
-                        default:
-                            break;
+                        if (newData.isEmpty()) {
+                            pe.setCancelled(true);
+                        } else {
+                            packet.getPlayerInfoDataLists().write(0, newData);
+                        }
                     }
                 }
             }
@@ -509,9 +505,7 @@ public class Core extends CorePlugin {
         queueManager = new QueueManager();
         queueManager.initialize();
 
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            queueManager.getQueues().forEach(PlayerQueue::checkQueue);
-        }, 0L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, () -> queueManager.getQueues().forEach(PlayerQueue::checkQueue), 0L, 20L);
     }
 
     /**
