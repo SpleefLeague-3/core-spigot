@@ -10,7 +10,7 @@
 
     <url>http://www.spleefleague.com/</url>
 
-    <version>1.0.0-1.19.2</version>
+    <version>1.19-R0.1</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -76,7 +76,7 @@
         </repository>
         <repository>
             <id>dmulloy2-repo</id>
-            <url>https://repo.dmulloy2.net/nexus/repository/public/</url>
+            <url>https://repo.dmulloy2.net/repository/public/</url>
         </repository>
         <repository>
             <id>central</id>
@@ -108,8 +108,8 @@
         </dependency>
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
-            <artifactId>ProtocolLib-API</artifactId>
-            <version>4.4.0</version>
+            <artifactId>ProtocolLib</artifactId>
+            <version>4.8.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -119,21 +119,21 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
+        <!--dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.9.12</version>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.5.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.waterfallmc</groupId>
             <artifactId>waterfall-api</artifactId>
-            <version>1.16-R0.4-SNAPSHOT</version>
+            <version>1.19-R0.1-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
     </dependencies>

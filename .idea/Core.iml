@@ -106,18 +106,15 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.ow2.asm:asm-commons:9.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.ow2.asm:asm-tree:9.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.ow2.asm:asm-analysis:9.2" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: com.comphenix.protocol:ProtocolLib-API:4.4.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: cglib:cglib-nodep:3.2.5" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: com.comphenix.executors:BukkitExecutors:1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.comphenix.protocol:ProtocolLib:4.8.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: net.bytebuddy:byte-buddy:1.12.8" level="project" />
     <orderEntry type="library" name="Maven: com.spleefleague:CoreAPI:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.reflections:reflections:0.9.12" level="project" />
-    <orderEntry type="library" name="Maven: org.javassist:javassist:3.26.0-GA" level="project" />
-    <orderEntry type="library" name="Maven: net.wesjd:anvilgui:1.4.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-api:1.16-R0.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-chat:1.16-R0.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-config:1.16-R0.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-event:1.16-R0.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-protocol:1.16-R0.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: net.wesjd:anvilgui:1.5.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-api:1.19-R0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-chat:1.19-R0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-config:1.19-R0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-event:1.19-R0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: io.github.waterfallmc:waterfall-protocol:1.19-R0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: net.md-5:brigadier:1.0.16-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: net.sf.trove4j:core:3.1.0" level="project" />
     <orderEntry type="library" name="Maven: se.llbit:jo-nbt:1.3.0" level="project" />
