@@ -154,8 +154,6 @@ public abstract class DynamicBattle<BP extends BattlePlayer> extends Battle<BP> 
     }
 
     private void applyEloChange(BP battler, int place) {
-        int halfCount = initBattlerCount / 2;
-        
         battler.getCorePlayer().sendMessage(Chat.colorize("             &6&l" + getMode().getDisplayName()));
         StringBuilder linebreak = new StringBuilder(Chat.colorize("             &8"));
         for (int i = 0; i < ChatUtils.getPixelCount(ChatColor.BOLD + getMode().getDisplayName()) / (double) (ChatUtils.getPixelCount("-")); i++) {

@@ -92,8 +92,7 @@ public abstract class CorePlugin extends JavaPlugin {
         coreLogger.addFilter(new CoreLoggerFilter());
         try {
             Properties mongoProps = new Properties();
-            String mongoPath = System.getProperty("user.dir") + "\\..\\..\\mongo.cfg";
-            System.out.println("MONGO PATH " + mongoPath);
+            String mongoPath = System.getProperty("user.dir") + "/mongo.cfg";
             FileInputStream file = new FileInputStream(mongoPath);
 
             mongoProps.load(file);
@@ -101,7 +100,6 @@ public abstract class CorePlugin extends JavaPlugin {
 
             String mongoPrefix = mongoProps.getProperty("prefix", "mongodb://");
             String credentials = mongoProps.getProperty("credentials", "");
-            System.out.println(credentials);
             if (!credentials.isEmpty()) credentials = credentials.concat("@");
             String host = mongoProps.getProperty("host", "localhost:27017") + "/";
             String defaultauthdb = mongoProps.getProperty("defaultauthdb", "admin") + "?";

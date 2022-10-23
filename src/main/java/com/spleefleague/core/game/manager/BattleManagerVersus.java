@@ -12,9 +12,7 @@ import com.spleefleague.core.Core;
 import com.spleefleague.core.game.Arena;
 import com.spleefleague.core.game.BattleMode;
 import com.spleefleague.core.game.arena.Arenas;
-import com.spleefleague.core.game.battle.Battle;
 import com.spleefleague.core.logger.CoreLogger;
-import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.CorePlayer;
 
 import java.util.List;
@@ -38,7 +36,6 @@ public class BattleManagerVersus extends BattleManager {
             CoreLogger.logError("", new NullPointerException("Null arena: " + arenaName));
             return;
         }
-        Battle<?> battle;
         for (CorePlayer cp : players) {
             if (!cp.canJoinBattle()) {
                 Core.getInstance().unqueuePlayerGlobally(cp);

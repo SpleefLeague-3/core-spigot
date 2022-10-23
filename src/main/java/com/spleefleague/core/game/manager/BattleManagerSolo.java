@@ -12,7 +12,6 @@ import com.spleefleague.core.Core;
 import com.spleefleague.core.game.Arena;
 import com.spleefleague.core.game.BattleMode;
 import com.spleefleague.core.game.arena.Arenas;
-import com.spleefleague.core.game.battle.Battle;
 import com.spleefleague.core.logger.CoreLogger;
 import com.spleefleague.core.player.CorePlayer;
 
@@ -36,7 +35,6 @@ public class BattleManagerSolo extends BattleManager {
             CoreLogger.logError("", new NullPointerException("Null arena: " + arenaName));
             return;
         }
-        Battle<?> battle;
         for (CorePlayer cp : players) {
             Core.getInstance().getPartyManager().leave(cp);
             if (!cp.canJoinBattle()) {

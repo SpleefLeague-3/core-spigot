@@ -15,6 +15,7 @@ public class QueueManager {
     private ArrayList<PlayerQueue> queues;
 
     public QueueManager() {
+
     }
 
     public void initialize() {
