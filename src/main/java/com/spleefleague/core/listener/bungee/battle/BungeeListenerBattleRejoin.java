@@ -17,11 +17,9 @@ public class BungeeListenerBattleRejoin extends BungeeListener<PacketBungeeBattl
         BattleMode battleMode = BattleMode.get(packet.mode);
         UUID battleId = packet.battleId;
         Core.getInstance().getPlayers().addPlayerJoinAction(packet.sender, cp -> {
-            Battle<?> battle = battleMode.getOngoingBattles().get(battleId);
-            if (battle.isOngoing()) {
-                Bukkit.getScheduler().runTaskLater(Core.getInstance(), () -> {
-                    battle.rejoinBattler(cp);
-                }, 20L);
+            Battle<?> battle = battleMode.getOngoingBattle(battleId);
+            if (battle != null && battle.isOngoing()) {
+                Bukkit.getScheduler().runTaskLater(Core.getInstance(), () -> battle.rejoinBattler(cp), 20L);
             } else {
                 Core.getInstance().returnToHub(cp);
             }

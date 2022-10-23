@@ -5,20 +5,19 @@ import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.chat.ChatUtils;
 import com.spleefleague.core.game.Arena;
 import com.spleefleague.core.game.BattleMode;
-import com.spleefleague.core.game.BattleUtils;
-import com.spleefleague.core.game.battle.BattlePlayer;
 import com.spleefleague.core.game.battle.Battle;
+import com.spleefleague.core.game.battle.BattlePlayer;
 import com.spleefleague.core.game.request.EndGameRequest;
 import com.spleefleague.core.game.request.PauseRequest;
 import com.spleefleague.core.game.request.ResetRequest;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.plugin.CorePlugin;
+import com.spleefleague.core.settings.Settings;
 import com.spleefleague.core.util.CoreUtils;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattleEnd;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,7 +63,7 @@ public abstract class DynamicBattle<BP extends BattlePlayer> extends Battle<BP> 
         if (battlers.isEmpty()) return;
         avgBattlerRating = 0;
         for (CorePlayer cp : battlers.keySet()) {
-            int rating = cp.getRatings().getElo(getMode().getName(), getMode().getSeason());
+            int rating = cp.getRatings().getElo(getMode().getName(), Settings.getCurrentSeason());
             avgBattlerRating += rating;
         }
         avgBattlerRating /= battlers.size();
@@ -156,27 +155,24 @@ public abstract class DynamicBattle<BP extends BattlePlayer> extends Battle<BP> 
 
     private void applyEloChange(BP battler, int place) {
         int halfCount = initBattlerCount / 2;
-        int shiftedPlace = place - halfCount;
-        if (initBattlerCount % 2 == 0) {
-            if (shiftedPlace >= 0) {
-                shiftedPlace++;
-            }
-        }
+        
         battler.getCorePlayer().sendMessage(Chat.colorize("             &6&l" + getMode().getDisplayName()));
         StringBuilder linebreak = new StringBuilder(Chat.colorize("             &8"));
         for (int i = 0; i < ChatUtils.getPixelCount(ChatColor.BOLD + getMode().getDisplayName()) / (double) (ChatUtils.getPixelCount("-")); i++) {
             linebreak.append("-");
         }
+        
         battler.getCorePlayer().sendMessage(linebreak.toString());
         if (forced) return;
-        int diffFromAvg = avgBattlerRating - battler.getCorePlayer().getRatings().getElo(getMode().getName(), getMode().getSeason());
+        
+        int diffFromAvg = avgBattlerRating - battler.getCorePlayer().getRatings().getElo(getMode().getName(), Settings.getCurrentSeason());
         diffFromAvg = Math.min(Math.max(diffFromAvg * 2, -750), 750);
         int eloChange = (int) (0.00001f * diffFromAvg * diffFromAvg + 0.014f * diffFromAvg + 20.f);
         float placePercent = (2 * (initBattlerCount - place - 1f) / (initBattlerCount - 1f)) - 1f;
         eloChange = (int) (eloChange * placePercent);
 
-        int initialElo = battler.getCorePlayer().getRatings().getElo(getMode().getName(), getMode().getSeason());
-        battler.getCorePlayer().getRatings().addRating(getMode().getName(), getMode().getSeason(), eloChange);
+        int initialElo = battler.getCorePlayer().getRatings().getElo(getMode().getName(), Settings.getCurrentSeason());
+        battler.getCorePlayer().getRatings().addRating(getMode().getName(), Settings.getCurrentSeason(), eloChange);
         battler.getCorePlayer().sendMessage(ChatColor.GRAY + " You have " +
                 (eloChange >= 0 ? "gained " : "lost ") +
                 ChatColor.GREEN + eloChange +
@@ -278,9 +274,11 @@ public abstract class DynamicBattle<BP extends BattlePlayer> extends Battle<BP> 
             removeBattler(cp);
             sortedBattlers.clear();
             sortedBattlers.addAll(battlers.values());
+            /*
             if (battlers.size() < 5) {
-                //chatGroup.removeTeam("p" + (battlers.size() - 1));
+                chatGroup.removeTeam("p" + (battlers.size() - 1));
             }
+            */
             if (remainingPlayers.isEmpty()) {
                 startRound();
             } else if (remainingPlayers.size() == 1) {

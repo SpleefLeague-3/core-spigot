@@ -186,6 +186,15 @@ public class BattleMode {
         return legendaryWeight;
     }
 
+    public Battle<?> getOngoingBattle(UUID battleId) {
+        return ongoingBattles.get(battleId);
+    }
+
+    /**
+     * @return Map of ongoing battles
+     * @deprecated instead, use {@link #getOngoingBattle(UUID)}
+     */
+    @Deprecated
     public Map<UUID, Battle<?>> getOngoingBattles() {
         return ongoingBattles;
     }
@@ -195,7 +204,7 @@ public class BattleMode {
     }
 
     public void removeBattle(Battle<?> battle) {
-        this.ongoingBattles.remove(battle);
+        this.ongoingBattles.remove(battle.getBattleId());
     }
 
     public TeamStyle getTeamStyle() {
@@ -257,6 +266,10 @@ public class BattleMode {
         return battleClass;
     }
 
+    /**
+     * @return current SpleefLeague season name
+     * @deprecated Repalced by {@link Settings#getCurrentSeason()}
+     */
     @Deprecated
     public String getSeason() {
         return Settings.getCurrentSeason();
