@@ -9,9 +9,9 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh "ssh -i ~/.ssh/id_rsa spleefleague@live.spleef.gg mkdir -p ./plugins/${BRANCH_NAME}"
+                sh "mkdir -p /mnt/jenkins/Core"
                 sh "rm ./target/original*"
-                sh "scp -i ~/.ssh/id_rsa ./target/*.jar spleefleague@live.spleef.gg:~/plugins/${BRANCH_NAME}/"
+                sh "cp ./target/*.jar /mnt/jenkins/Core/"
             }
         }
     }
