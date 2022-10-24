@@ -361,4 +361,9 @@ public class FakeEntitySnowball extends net.minecraft.world.entity.projectile.Sn
         return super.getBukkitEntity().getHandle();
     }
 
+    @Override
+    public boolean isAlive() {
+        return super.isAlive();
+    }
+
 }
