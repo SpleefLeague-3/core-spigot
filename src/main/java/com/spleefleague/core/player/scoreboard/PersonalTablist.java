@@ -3,11 +3,9 @@ package com.spleefleague.core.player.scoreboard;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.google.common.collect.Lists;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.settings.Settings;
-import com.spleefleague.core.util.PacketUtils;
 import org.bukkit.ChatColor;
 
 import java.util.*;

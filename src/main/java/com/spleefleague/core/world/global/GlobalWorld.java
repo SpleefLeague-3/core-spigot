@@ -10,12 +10,14 @@ import com.spleefleague.core.world.game.projectile.ProjectileWorld;
 import com.spleefleague.core.world.game.projectile.ProjectileWorldPlayer;
 import com.spleefleague.core.world.global.lock.GlobalLock;
 import com.spleefleague.core.world.global.vehicle.GlobalVehicle;
-import net.minecraft.server.v1_15_R1.Entity;
-import net.minecraft.server.v1_15_R1.ItemStack;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -70,13 +72,11 @@ public class GlobalWorld extends ProjectileWorld<GlobalWorldPlayer> {
 
             public RotatingItem(ProjectileWorld<? extends ProjectileWorldPlayer> world, double x, double y, double z, ItemStack item) {
                 remainingTime = 40;
-                world.getPlayerMap().values().forEach(pwp -> {
-                    FakeUtils.sendArmorStandSpawn(
-                            pwp.getPlayer(),
-                            entityId,
-                            x, y, z + RADIUS,
-                            item);
-                });
+                world.getPlayerMap().values().forEach(pwp -> FakeUtils.sendArmorStandSpawn(
+                        pwp.getPlayer(),
+                        entityId,
+                        x, y, z + RADIUS,
+                        item));
                 this.x = x;
                 this.y = y;
                 this.z = z + RADIUS;
@@ -87,33 +87,28 @@ public class GlobalWorld extends ProjectileWorld<GlobalWorldPlayer> {
                 if (--remainingTime > 0) {
                     return true;
                 } else {
-                    world.getPlayerMap().values().forEach(pwp -> {
-                        FakeUtils.sendEntityDestroy(
-                                pwp.getPlayer(),
-                                entityId
-                        );
-                    });
+                    world.getPlayerMap().values().forEach(pwp -> FakeUtils.sendEntityDestroy(
+                            pwp.getPlayer(),
+                            entityId
+                    ));
                     return false;
                 }
             }
 
             public void update(float rotation, short changeX, short changeY, short changeZ) {
                 short realChangeX = (short) (changeX + (Math.sin(rotation) - Math.sin(lastRotation)) * COMPRESS_MULTIPLY * RADIUS);
-                short realChangeY = changeY;
                 short realChangeZ = (short) (changeZ + (Math.cos(rotation) - Math.cos(lastRotation)) * COMPRESS_MULTIPLY * RADIUS);
                 this.x += realChangeX / COMPRESS_MULTIPLY;
-                this.y += realChangeY / COMPRESS_MULTIPLY;
+                this.y += changeY / COMPRESS_MULTIPLY;
                 this.z += realChangeZ / COMPRESS_MULTIPLY;
-                world.getPlayerMap().values().forEach(pwp -> {
-                    FakeUtils.sendEntityMoveLook(
-                            pwp.getPlayer(),
-                            entityId,
-                            realChangeX,
-                            realChangeY,
-                            realChangeZ,
-                            (float) (-rotation + Math.PI),
-                            0);
-                });
+                world.getPlayerMap().values().forEach(pwp -> FakeUtils.sendEntityMoveLook(
+                        pwp.getPlayer(),
+                        entityId,
+                        realChangeX,
+                        changeY,
+                        realChangeZ,
+                        (float) (-rotation + Math.PI),
+                        0));
                 world.spawnParticles(Particle.CLOUD, x, y, z, 0, 0, 0, 0, 1);
                 lastRotation = rotation;
             }
@@ -189,9 +184,7 @@ public class GlobalWorld extends ProjectileWorld<GlobalWorldPlayer> {
 
     protected GlobalWorld(World world) {
         super(-1, world, GlobalWorldPlayer.class);
-        rotatingItemTask = Bukkit.getScheduler().runTaskTimer(Core.getInstance(), () -> {
-            rotatingItemMap.entrySet().removeIf(entry -> !entry.getValue().onTick());
-        }, 3L, 3L);
+        rotatingItemTask = Bukkit.getScheduler().runTaskTimer(Core.getInstance(), () -> rotatingItemMap.entrySet().removeIf(entry -> !entry.getValue().onTick()), 3L, 3L);
     }
 
     public void addRotationItem(CorePlayer corePlayer, org.bukkit.inventory.ItemStack itemStack) {
@@ -233,37 +226,34 @@ public class GlobalWorld extends ProjectileWorld<GlobalWorldPlayer> {
     }
 
     @Override
-    protected List<net.minecraft.server.v1_15_R1.Entity> shoot(CorePlayer shooter,
+    protected List<Entity> shoot(CorePlayer shooter,
                                                                Location location,
                                                                ProjectileStats projectileStats,
                                                                double charge) {
-        List<net.minecraft.server.v1_15_R1.Entity> entities = new ArrayList<>();
+        List<Entity> entities = new ArrayList<>();
         try {
             for (ProjectileWorldPlayer pwp : playerMap.values()) {
                 if (pwp.getCorePlayer().getOptions().getBoolean("Sound:Gadget")) {
                     pwp.getPlayer().playSound(location, projectileStats.soundEffect, projectileStats.soundVolume.floatValue(), projectileStats.soundPitch.floatValue());
                 }
             }
-            switch (projectileStats.shape) {
-                case PLUS:
-                    shoot(entities, shooter, location.clone(),
+            if (projectileStats.shape == ProjectileStats.Shape.PLUS) {
+                shoot(entities, shooter, location.clone(),
+                        projectileStats, charge);
+                for (int i = 1; i <= projectileStats.count; i++) {
+                    shoot(entities, shooter, location.clone().add(
+                                    location.clone().getDirection().crossProduct(new Vector(0, 1, 0)).normalize().multiply(i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
                             projectileStats, charge);
-                    for (int i = 1; i <= projectileStats.count; i++) {
-                        shoot(entities, shooter, location.clone().add(
-                                location.clone().getDirection().crossProduct(new org.bukkit.util.Vector(0, 1, 0)).normalize().multiply(i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
-                                projectileStats, charge);
-                        shoot(entities, shooter, location.clone().add(
-                                location.clone().getDirection().crossProduct(new org.bukkit.util.Vector(0, 1, 0)).normalize().multiply(-i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
-                                projectileStats, charge);
-                    }
-                    shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge * 2 + 1));
-                    break;
-                default:
-                    for (int i = 0; i < projectileStats.count * charge; i++) {
-                        shoot(entities, shooter, location, projectileStats, charge);
-                    }
-                    shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge));
-                    break;
+                    shoot(entities, shooter, location.clone().add(
+                                    location.clone().getDirection().crossProduct(new Vector(0, 1, 0)).normalize().multiply(-i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
+                            projectileStats, charge);
+                }
+                shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge * 2 + 1));
+            } else {
+                for (int i = 0; i < projectileStats.count * charge; i++) {
+                    shoot(entities, shooter, location, projectileStats, charge);
+                }
+                shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge));
             }
             if (charge >= 0.2 && Math.abs(projectileStats.fireKnockback) > 0.001) {
                 shooter.getPlayer().setVelocity(shooter.getPlayer().getLocation().getDirection().multiply(-projectileStats.fireKnockback * charge));

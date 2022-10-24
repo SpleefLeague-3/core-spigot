@@ -8,9 +8,12 @@ package com.spleefleague.core.world.game.projectile;
 
 import com.spleefleague.coreapi.database.annotation.DBField;
 import com.spleefleague.coreapi.database.variable.DBEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.item.SnowballItem;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -35,7 +38,7 @@ public class ProjectileStats extends DBEntity {
         DEFAULT, CHARGE
     }
 
-    public Class<? extends net.minecraft.server.v1_15_R1.Entity> entityClass = FakeEntitySnowball.class;
+    public Class<? extends Entity> entityClass = FakeEntitySnowball.class;
     @DBField
     public BreakStyle breakStyle = BreakStyle.DEFAULT;
     @DBField
@@ -104,7 +107,7 @@ public class ProjectileStats extends DBEntity {
     public Double size = 0D;
     @DBField
     public Double fireKnockback = 0D;
-    private net.minecraft.server.v1_15_R1.ItemStack projectileItem;
+    private net.minecraft.world.item.ItemStack projectileItem;
 
     public ProjectileStats() {
 
@@ -118,7 +121,7 @@ public class ProjectileStats extends DBEntity {
         projectileItem = CraftItemStack.asNMSCopy(itemStack);
     }
 
-    public net.minecraft.server.v1_15_R1.ItemStack getProjectileItem() {
+    public net.minecraft.world.item.ItemStack getProjectileItem() {
         return projectileItem;
     }
 

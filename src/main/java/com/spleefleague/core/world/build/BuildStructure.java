@@ -1,28 +1,24 @@
 package com.spleefleague.core.world.build;
 
 import com.comphenix.protocol.wrappers.BlockPosition;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Shorts;
-import com.google.common.primitives.UnsignedBytes;
-import com.spleefleague.core.util.variable.Position;
 import com.spleefleague.core.world.FakeBlock;
 import com.spleefleague.coreapi.database.annotation.DBField;
 import com.spleefleague.coreapi.database.annotation.DBLoad;
 import com.spleefleague.coreapi.database.annotation.DBSave;
 import com.spleefleague.coreapi.database.variable.DBEntity;
-import com.spleefleague.coreapi.utils.BinaryUtils;
-import net.minecraft.server.v1_15_R1.Block;
-import net.minecraft.server.v1_15_R1.IBlockData;
-import net.minecraft.server.v1_15_R1.RegistryBlockID;
+import net.minecraft.core.IdMapper;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.bson.Document;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_15_R1.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.v1_19_R1.block.CraftBlockState;
+import org.bukkit.craftbukkit.v1_19_R1.block.CraftBlockStates;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -35,7 +31,7 @@ import java.util.*;
 public class BuildStructure extends DBEntity {
 
     private static final int STRUCTURES_VERSION = 3;
-    private static final RegistryBlockID<IBlockData> REGISTRY = Block.REGISTRY_ID;
+    private static final IdMapper<BlockState> REGISTRY = Block.BLOCK_STATE_REGISTRY;
 
     @DBField
     private String name;
@@ -60,17 +56,17 @@ public class BuildStructure extends DBEntity {
     protected Document saveFakeBlocks() {
         Map<BlockData, Short> blockToIndex = new HashMap<>();
         List<Integer> palette = new ArrayList<>();
-        palette.add(REGISTRY.getId(((CraftBlockData) Material.AIR.createBlockData()).getState()));
+        palette.add(REGISTRY.getId(((CraftBlockState) Material.AIR.createBlockData()).getHandle()));
         List<Long> blocks = new ArrayList<>();
         for (Map.Entry<BlockPosition, FakeBlock> entry : fakeBlocks.entrySet()) {
-            BlockData blockData = entry.getValue().getBlockData();
+            BlockData blockData = entry.getValue().blockData();
             if (!blockToIndex.containsKey(blockData)) {
-                IBlockData iBlockData = ((CraftBlockData) blockData).getState();
-                if (iBlockData.isAir()) {
+                BlockState blockState = ((CraftBlockState) blockData).getHandle();
+                if (blockState.isAir()) {
                     blockToIndex.put(blockData, (short) 0);
                 } else {
                     blockToIndex.put(blockData, (short) palette.size());
-                    palette.add(REGISTRY.getId(iBlockData));
+                    palette.add(REGISTRY.getId(blockState));
                 }
             }
             byte[] bData = Shorts.toByteArray(blockToIndex.get(blockData));
@@ -126,7 +122,7 @@ public class BuildStructure extends DBEntity {
             if (palette != null) {
                 Map<Byte, BlockData> idToBlock = new HashMap<>();
                 for (byte i = 0; i < palette.size(); i++) {
-                    idToBlock.put(i, CraftBlockData.fromData(REGISTRY.fromId(palette.get(i))));
+                    idToBlock.put(i, (BlockData) REGISTRY.byId(palette.get(i)));
                 }
                 List<Integer> blocks = doc.get("blocks", List.class);
                 for (int block : blocks) {
@@ -154,7 +150,7 @@ public class BuildStructure extends DBEntity {
             if (palette != null) {
                 Map<Short, BlockData> idToBlock = new HashMap<>();
                 for (short i = 0; i < palette.size(); i++) {
-                    idToBlock.put(i, CraftBlockData.fromData(REGISTRY.fromId(palette.get(i))));
+                    idToBlock.put(i, (BlockData) (REGISTRY.byId(palette.get(i))));
                 }
                 List<Long> blocks = doc.get("blocks", List.class);
                 for (long block : blocks) {
@@ -185,7 +181,7 @@ public class BuildStructure extends DBEntity {
             if (palette != null) {
                 Map<Short, BlockData> idToBlock = new HashMap<>();
                 for (short i = 0; i < palette.size(); i++) {
-                    idToBlock.put(i, CraftBlockData.fromData(REGISTRY.fromId(palette.get(i))));
+                    idToBlock.put(i, (BlockData) (REGISTRY.byId(palette.get(i))));
                 }
                 List<Long> blocks = doc.get("blocks", List.class);
                 for (long block : blocks) {

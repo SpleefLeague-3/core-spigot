@@ -85,7 +85,7 @@ public class Chat {
     }
 
     private static FormattedPlayerMessage formatPlayerMessage(String message, TextComponent baseFormat) {
-        TextComponent textComponent = (TextComponent) baseFormat.duplicate();
+        TextComponent textComponent = baseFormat.duplicate();
 
         Matcher urlMatcher = URL_PATTERN.matcher(message);
         StringBuilder builder = new StringBuilder();

@@ -11,6 +11,7 @@ import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 import com.spleefleague.coreapi.chat.Chat;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -103,6 +104,8 @@ public enum ChatChannel {
         } else {
             tagComponent = new TextComponent();
         }
+
+
 
         playerMessageComponent = new TextComponent();
         for (com.spleefleague.coreapi.chat.ChatColor chatColor : com.spleefleague.coreapi.chat.ChatColor.getChatColors(this.playerChatColor)) {

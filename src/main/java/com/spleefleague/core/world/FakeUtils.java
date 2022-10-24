@@ -4,13 +4,21 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.BlockPosition;
+import com.google.common.collect.Lists;
+import com.mojang.datafixers.util.Pair;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.util.MathUtils;
 import com.spleefleague.core.util.variable.Position;
-import net.minecraft.server.v1_15_R1.*;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -30,7 +38,7 @@ public class FakeUtils {
     }
 
     public static boolean isOnGround(CorePlayer cp) {
-        if (cp.getPlayer().isOnGround()) return true;
+        if (cp.isOnGround()) return true;
         if (cp.getPlayer().getVelocity().getY() > 0) return false;
         Set<BlockPosition> blockPositions = new HashSet<>();
         BoundingBox bb = cp.getPlayer().getBoundingBox();
@@ -57,7 +65,7 @@ public class FakeUtils {
             while (posit.hasNext()) {
                 FakeBlock fakeBlock = fakeWorld.getFakeBlock(posit.next());
                 if (fakeBlock != null) {
-                    if (fakeBlock.getBlockData().getMaterial().isBlock()) {
+                    if (fakeBlock.blockData().getMaterial().isBlock()) {
                         return true;
                     } else {
                         posit.remove();
@@ -75,7 +83,7 @@ public class FakeUtils {
             while (fit.hasNext()) {
                 FakeWorld<?> fakeWorld = fit.next();
                 FakeBlock fakeBlock = fakeWorld.getFakeBlock(pos);
-                if (fakeBlock != null && !fakeBlock.getBlockData().getMaterial().isAir()) {
+                if (fakeBlock != null && !fakeBlock.blockData().getMaterial().isAir()) {
                     return pos;
                 }
             }
@@ -94,7 +102,7 @@ public class FakeUtils {
             while (fit.hasNext()) {
                 FakeWorld<?> fakeWorld = fit.next();
                 FakeBlock fb = fakeWorld.getFakeBlock(pos);
-                if (fb != null && !fb.getBlockData().getMaterial().isAir()) {
+                if (fb != null && !fb.blockData().getMaterial().isAir()) {
                     return pos;
                 }
             }
@@ -106,9 +114,7 @@ public class FakeUtils {
     public static Map<BlockPosition, FakeBlock> mergeBlocks(List<Map<BlockPosition, FakeBlock>> blockMaps) {
         Map<BlockPosition, FakeBlock> mergedBlocks = new HashMap<>();
         for (Map<BlockPosition, FakeBlock> blockMap : blockMaps) {
-            for (Map.Entry<BlockPosition, FakeBlock> entry : blockMap.entrySet()) {
-                mergedBlocks.put(entry.getKey(), entry.getValue());
-            }
+            mergedBlocks.putAll(blockMap);
         }
         return mergedBlocks;
     }
@@ -263,41 +269,37 @@ public class FakeUtils {
 
     private static final ProtocolManager protocolManager = Core.getProtocolManager();
     private static final UUID unused = UUID.randomUUID();
-    private static final EntityArmorStand armorStand = new EntityArmorStand(((CraftWorld) Core.OVERWORLD).getHandle(), 0, 0, 0);
-    private static final DataWatcher dataWatcher;
+    private static final ArmorStand armorStand = new ArmorStand(((CraftWorld) Core.OVERWORLD).getHandle(), 0, 0, 0);
+    private static final SynchedEntityData entityData;
 
     static {
         armorStand.setInvisible(true);
         armorStand.setSmall(true);
 
-        dataWatcher = armorStand.getDataWatcher();
+        entityData = armorStand.getEntityData();
     }
 
     public static void sendArmorStandSpawn(Player player, int entityId, double x, double y, double z, ItemStack item) {
         try {
-            PacketPlayOutSpawnEntity packetPlayOutSpawnEntity = new PacketPlayOutSpawnEntity(
-                    entityId,
+            ClientboundAddEntityPacket addEntityPacket = new ClientboundAddEntityPacket(entityId,
                     unused,
                     x,
                     y,
                     z,
                     0f, 0f,
-                    EntityTypes.ARMOR_STAND,
-                    0, Vec3D.a);
-            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY, packetPlayOutSpawnEntity), null, false);
+                    EntityType.ARMOR_STAND,
+                    0,
+                    Vec3.ZERO,
+                    0);
+            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY, addEntityPacket), null, false);
 
-            PacketPlayOutEntityMetadata packetPlayOutEntityMetadata = new PacketPlayOutEntityMetadata(
-                    entityId,
-                    dataWatcher,
-                    true);
-            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.ENTITY_METADATA, packetPlayOutEntityMetadata), null, false);
+            ClientboundSetEntityDataPacket entityDataPacket = new ClientboundSetEntityDataPacket(entityId, entityData, true);
+            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.ENTITY_METADATA, entityDataPacket), null, false);
 
-            PacketPlayOutEntityEquipment packetPlayOutEntityEquipment = new PacketPlayOutEntityEquipment(
+            ClientboundSetEquipmentPacket equipmentPacket = new ClientboundSetEquipmentPacket(
                     entityId,
-                    EnumItemSlot.HEAD,
-                    item
-            );
-            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.ENTITY_EQUIPMENT, packetPlayOutEntityEquipment), null, false);
+                    Lists.newArrayList(new Pair<>(EquipmentSlot.HEAD, item)));
+            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.ENTITY_EQUIPMENT, equipmentPacket), null, false);
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -305,13 +307,15 @@ public class FakeUtils {
 
     public static void sendEntityMove(Player player, int entityId, short changeX, short changeY, short changeZ) {
         try {
-            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.REL_ENTITY_MOVE, new PacketPlayOutEntity.PacketPlayOutRelEntityMove(
-                    entityId,
-                    changeX,
-                    changeY,
-                    changeZ,
-                    true
-            )), null, false);
+
+            protocolManager.sendServerPacket(player,
+                    new PacketContainer(PacketType.Play.Server.REL_ENTITY_MOVE,
+                    new ClientboundMoveEntityPacket.Pos(
+                            entityId,
+                            changeX,
+                            changeY,
+                            changeZ,
+                            true)), null, false);
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -319,25 +323,25 @@ public class FakeUtils {
 
     public static void sendEntityMoveLook(Player player, int entityId, short changeX, short changeY, short changeZ, float yaw, float pitch) {
         try {
-            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.REL_ENTITY_MOVE_LOOK, new PacketPlayOutEntity.PacketPlayOutRelEntityMoveLook(
+            protocolManager.sendServerPacket(player,
+                    new PacketContainer(PacketType.Play.Server.REL_ENTITY_MOVE_LOOK,
+                    new ClientboundMoveEntityPacket.PosRot(
                     entityId,
                     changeX,
                     changeY,
                     changeZ,
                     (byte) (yaw / Math.PI / 2 * 256),
                     (byte) (pitch / Math.PI / 2 * 256),
-                    true
-            )), null, false);
+                    true)), null, false);
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
     }
 
-    public static void sendEntityDestroy(Player player, int entityId) {
+    public static void sendEntityDestroy(Player player, int... entityIds) {
         try {
-            protocolManager.sendServerPacket(player, new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY, new PacketPlayOutEntityDestroy(
-                    entityId
-            )), null, false);
+            protocolManager.sendServerPacket(player,
+                    new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY, new ClientboundRemoveEntitiesPacket(entityIds)), null, false);
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }

@@ -2,8 +2,12 @@ package com.spleefleague.core.util;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.*;
+import com.comphenix.protocol.wrappers.BlockPosition;
+import com.comphenix.protocol.wrappers.ChunkCoordIntPair;
+import com.comphenix.protocol.wrappers.MultiBlockChangeInfo;
+import com.comphenix.protocol.wrappers.WrappedBlockData;
 import com.mojang.authlib.GameProfile;
+import com.spleefleague.core.Core;
 import com.spleefleague.core.logger.CoreLogger;
 import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.util.packet.BlockPalette;
@@ -13,20 +17,21 @@ import com.spleefleague.core.util.packet.ChunkSection;
 import com.spleefleague.core.util.variable.MultiBlockChange;
 import com.spleefleague.core.world.ChunkCoord;
 import com.spleefleague.core.world.FakeBlock;
-import net.minecraft.server.v1_15_R1.EnumGamemode;
-import net.minecraft.server.v1_15_R1.IChatBaseComponent;
-import net.minecraft.server.v1_15_R1.PacketPlayOutPlayerInfo;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket;
+import net.minecraft.server.level.ServerPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author NickM13 and Jonas
@@ -34,45 +39,41 @@ import java.util.UUID;
  */
 public class PacketUtils {
 
+    private static ServerPlayer mapToServerPlayer(UUID uuid, String name) {
+        return new ServerPlayer(
+                ((CraftServer) Bukkit.getServer()).getServer(),
+                ((CraftWorld) Core.OVERWORLD).getHandle(),
+                new GameProfile(
+                        uuid,
+                        name
+                ),
+                null
+        );
+    }
+
     public static PacketContainer createAddPlayerPacket(List<CoreOfflinePlayer> corePlayers) {
-        try {
-            PacketPlayOutPlayerInfo nmsPacket = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER);
-            Field playerListField = PacketPlayOutPlayerInfo.class.getDeclaredField("b");
-            playerListField.setAccessible(true);
-            List playerList = (List) playerListField.get(nmsPacket);
-            for (CoreOfflinePlayer cp : corePlayers) {
-                playerList.add(PacketPlayOutPlayerInfo.class.getDeclaredClasses()[0].getDeclaredConstructor(PacketPlayOutPlayerInfo.class, GameProfile.class, int.class, EnumGamemode.class, IChatBaseComponent.class)
-                        .newInstance(nmsPacket, new GameProfile(cp.getUniqueId(), cp.getName()), 1, EnumGamemode.ADVENTURE, IChatBaseComponent.ChatSerializer.a(WrappedChatComponent.fromText(cp.getRankedDisplayName()).getJson())));
-            }
-            return new PacketContainer(PacketType.Play.Server.PLAYER_INFO, nmsPacket);
-        } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException exception) {
-            CoreLogger.logError(exception);
-        }
-        return null;
+        ClientboundPlayerInfoPacket playerInfoPacket = new ClientboundPlayerInfoPacket(
+                ClientboundPlayerInfoPacket.Action.ADD_PLAYER,
+                corePlayers.stream()
+                        .map(cp -> mapToServerPlayer(cp.getUniqueId(), cp.getName()))
+                        .collect(Collectors.toList()));
+        return new PacketContainer(PacketType.Play.Server.PLAYER_INFO, playerInfoPacket);
     }
 
     public static PacketContainer createRemovePlayerPacket(List<UUID> uuids) {
-        try {
-            PacketPlayOutPlayerInfo nmsPacket = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER);
-            Field playerListField = PacketPlayOutPlayerInfo.class.getDeclaredField("b");
-            playerListField.setAccessible(true);
-            List playerList = (List) playerListField.get(nmsPacket);
-            for (UUID uuid : uuids) {
-                playerList.add(PacketPlayOutPlayerInfo.class.getDeclaredClasses()[0].getDeclaredConstructor(PacketPlayOutPlayerInfo.class, GameProfile.class, int.class, EnumGamemode.class, IChatBaseComponent.class)
-                        .newInstance(nmsPacket, new GameProfile(uuid, null), 1, EnumGamemode.ADVENTURE, IChatBaseComponent.ChatSerializer.a(WrappedChatComponent.fromText("").getJson())));
-            }
-            return new PacketContainer(PacketType.Play.Server.PLAYER_INFO, nmsPacket);
-        } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException exception) {
-            CoreLogger.logError(exception);
-        }
-        return null;
+        ClientboundPlayerInfoPacket playerInfoPacket = new ClientboundPlayerInfoPacket(
+                ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER,
+                uuids.stream()
+                        .map(uuid -> mapToServerPlayer(uuid, null))
+                        .collect(Collectors.toList()));
+        return new PacketContainer(PacketType.Play.Server.PLAYER_INFO, playerInfoPacket);
     }
 
     public static PacketContainer createBlockChangePacket(BlockPosition blockPos, FakeBlock fakeBlock) {
         PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.BLOCK_CHANGE);
 
         packetContainer.getBlockPositionModifier().write(0, blockPos);
-        packetContainer.getBlockData().write(0, WrappedBlockData.createData(fakeBlock.getBlockData().getMaterial()));
+        packetContainer.getBlockData().write(0, WrappedBlockData.createData(fakeBlock.blockData().getMaterial()));
 
         return packetContainer;
     }
@@ -169,13 +170,13 @@ public class PacketUtils {
             for (Map.Entry<Short, FakeBlock> blockEntry : sectionEntry.getValue().entrySet()) {
                 int sectionPos = blockEntry.getKey() & 0xFFF;
                 boolean previouslyAir = section.getBlockRelative(sectionPos).getMaterial().isAir();
-                section.setBlockRelative(blockEntry.getValue().getBlockData(), sectionPos);
+                section.setBlockRelative(blockEntry.getValue().blockData(), sectionPos);
                 if (previouslyAir) {
-                    if (!blockEntry.getValue().getBlockData().getMaterial().isAir()) {
+                    if (!blockEntry.getValue().blockData().getMaterial().isAir()) {
                         airChange++;
                     }
                 } else {
-                    if (blockEntry.getValue().getBlockData().getMaterial().isAir()) {
+                    if (blockEntry.getValue().blockData().getMaterial().isAir()) {
                         airChange--;
                     }
                 }

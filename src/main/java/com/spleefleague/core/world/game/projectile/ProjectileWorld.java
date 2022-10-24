@@ -11,12 +11,12 @@ import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.util.variable.BlockRaycastResult;
 import com.spleefleague.core.world.FakeWorld;
 import com.spleefleague.core.world.game.GameProjectile;
-import net.minecraft.server.v1_15_R1.Entity;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -97,7 +97,7 @@ public class ProjectileWorld<PWP extends ProjectileWorldPlayer> extends FakeWorl
 
     public void clearProjectiles() {
         for (GameProjectile gp : projectiles.values()) {
-            gp.getEntity().killEntity();
+            gp.getEntity().kill();
         }
         projectiles.clear();
     }
@@ -106,50 +106,47 @@ public class ProjectileWorld<PWP extends ProjectileWorldPlayer> extends FakeWorl
         projectiles.entrySet().removeIf(uuidGameProjectileEntry -> !uuidGameProjectileEntry.getValue().getEntity().isAlive());
     }
 
-    protected net.minecraft.server.v1_15_R1.Entity shoot(List<Entity> entities,
+    protected Entity shoot(List<Entity> entities,
                                                          CorePlayer shooter,
                                                          Location location,
                                                          ProjectileStats projectileStats,
                                                          double charge)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        net.minecraft.server.v1_15_R1.Entity entity = projectileStats.entityClass
+        Entity entity = projectileStats.entityClass
                 .getDeclaredConstructor(ProjectileWorld.class, CorePlayer.class, Location.class, ProjectileStats.class, Double.class)
                 .newInstance(this, shooter, location, projectileStats, charge);
-        projectiles.put(entity.getUniqueID(), new GameProjectile(entity, projectileStats));
-        ((CraftWorld) getWorld()).getHandle().addEntity(entity);
+        projectiles.put(entity.getUUID(), new GameProjectile(entity, projectileStats));
+        ((CraftWorld) getWorld()).getHandle().addFreshEntity(entity);
         entities.add(entity);
         return entity;
     }
 
-    protected List<net.minecraft.server.v1_15_R1.Entity> shoot(CorePlayer shooter,
-                                                               Location location,
-                                                               ProjectileStats projectileStats,
-                                                               double charge) {
-        List<net.minecraft.server.v1_15_R1.Entity> entities = new ArrayList<>();
+    protected List<Entity> shoot(CorePlayer shooter,
+                                 Location location,
+                                 ProjectileStats projectileStats,
+                                 double charge) {
+        List<Entity> entities = new ArrayList<>();
         try {
             for (ProjectileWorldPlayer pwp : playerMap.values()) {
                 pwp.getPlayer().playSound(location, projectileStats.soundEffect, projectileStats.soundVolume.floatValue(), projectileStats.soundPitch.floatValue());
             }
-            switch (projectileStats.shape) {
-                case PLUS:
-                    shoot(entities, shooter, location.clone(),
+            if (projectileStats.shape == ProjectileStats.Shape.PLUS) {
+                shoot(entities, shooter, location.clone(),
+                        projectileStats, charge);
+                for (int i = 1; i <= projectileStats.count; i++) {
+                    shoot(entities, shooter, location.clone().add(
+                                    location.clone().getDirection().crossProduct(new Vector(0, 1, 0)).normalize().multiply(i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
                             projectileStats, charge);
-                    for (int i = 1; i <= projectileStats.count; i++) {
-                        shoot(entities, shooter, location.clone().add(
-                                location.clone().getDirection().crossProduct(new org.bukkit.util.Vector(0, 1, 0)).normalize().multiply(i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
-                                projectileStats, charge);
-                        shoot(entities, shooter, location.clone().add(
-                                location.clone().getDirection().crossProduct(new org.bukkit.util.Vector(0, 1, 0)).normalize().multiply(-i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
-                                projectileStats, charge);
-                    }
-                    shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge * 2 + 1));
-                    break;
-                default:
-                    for (int i = 0; i < projectileStats.count * charge; i++) {
-                        shoot(entities, shooter, location, projectileStats, charge);
-                    }
-                    shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge));
-                    break;
+                    shoot(entities, shooter, location.clone().add(
+                                    location.clone().getDirection().crossProduct(new Vector(0, 1, 0)).normalize().multiply(-i * (float) projectileStats.hSpread / 100 / projectileStats.count)),
+                            projectileStats, charge);
+                }
+                shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge * 2 + 1));
+            } else {
+                for (int i = 0; i < projectileStats.count * charge; i++) {
+                    shoot(entities, shooter, location, projectileStats, charge);
+                }
+                shooter.getStatistics().add("splegg", "eggsFired", (int) (projectileStats.count * charge));
             }
             if (charge >= 0.2 && Math.abs(projectileStats.fireKnockback) > 0.001) {
                 shooter.getPlayer().setVelocity(shooter.getPlayer().getLocation().getDirection().multiply(-projectileStats.fireKnockback * charge));
@@ -161,13 +158,13 @@ public class ProjectileWorld<PWP extends ProjectileWorldPlayer> extends FakeWorl
     }
 
     @SuppressWarnings("unused")
-    public List<net.minecraft.server.v1_15_R1.Entity> shootProjectileCharged(CorePlayer shooter, ProjectileStats projectileStats, double charge) {
+    public List<Entity> shootProjectileCharged(CorePlayer shooter, ProjectileStats projectileStats, double charge) {
         return shootProjectileCharged(shooter, shooter.getPlayer().getEyeLocation().clone(),
                 projectileStats,
                 charge);
     }
 
-    public List<net.minecraft.server.v1_15_R1.Entity> shootProjectileCharged(CorePlayer shooter, Location location, ProjectileStats projectileStats, double charge) {
+    public List<Entity> shootProjectileCharged(CorePlayer shooter, Location location, ProjectileStats projectileStats, double charge) {
         if (projectileStats.repeat > 1) {
             if (!futureShots.containsKey(shooter.getUniqueId())) {
                 futureShots.put(shooter.getUniqueId(), new HashSet<>());
@@ -178,11 +175,11 @@ public class ProjectileWorld<PWP extends ProjectileWorldPlayer> extends FakeWorl
     }
 
     @SuppressWarnings("unused")
-    public List<net.minecraft.server.v1_15_R1.Entity> shootProjectile(CorePlayer shooter, ProjectileStats projectileStats) {
+    public List<Entity> shootProjectile(CorePlayer shooter, ProjectileStats projectileStats) {
         return shootProjectile(shooter, shooter.getPlayer().getEyeLocation().clone(), projectileStats);
     }
 
-    public List<net.minecraft.server.v1_15_R1.Entity> shootProjectile(CorePlayer shooter, Location location, ProjectileStats projectileStats) {
+    public List<Entity> shootProjectile(CorePlayer shooter, Location location, ProjectileStats projectileStats) {
         if (projectileStats.repeat > 1) {
             if (!futureShots.containsKey(shooter.getUniqueId())) {
                 futureShots.put(shooter.getUniqueId(), new HashSet<>());

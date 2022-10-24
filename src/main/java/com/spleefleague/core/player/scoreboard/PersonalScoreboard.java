@@ -9,7 +9,7 @@ package com.spleefleague.core.player.scoreboard;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_15_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;

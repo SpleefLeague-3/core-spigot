@@ -11,7 +11,7 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import java.util.*;
 
 import com.spleefleague.coreapi.database.variable.DBVariable;
-import net.minecraft.server.v1_15_R1.Vec3D;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -38,10 +38,10 @@ public class Point extends DBVariable<List<Double>> {
         this.z = z;
     }
 
-    public Point(Vec3D vec) {
-        this.x = vec.getX();
-        this.y = vec.getY();
-        this.z = vec.getZ();
+    public Point(Vec3 vec) {
+        this.x = vec.x;
+        this.y = vec.y;
+        this.z = vec.z;
     }
 
     public Point(Location loc) {
@@ -118,9 +118,9 @@ public class Point extends DBVariable<List<Double>> {
 
     private List<BlockRaycastResult> castBlocks(double x, double y, double z, Vector direction, double maxDist) {
         direction = direction.normalize();
-        double px = x < 0 ? x + -Math.floor(x) : x;
-        double py = y < 0 ? y + -Math.floor(y) : y;
-        double pz = z < 0 ? z + -Math.floor(z) : z;
+        double px = x < 0 ? x - Math.floor(x) : x;
+        double py = y < 0 ? y - Math.floor(y) : y;
+        double pz = z < 0 ? z - Math.floor(z) : z;
 
         double distX = direction.getX() > 0 ? (1 - (px % 1)) : (px % 1);
         double distY = direction.getY() > 0 ? (1 - (py % 1)) : (py % 1);
@@ -164,7 +164,7 @@ public class Point extends DBVariable<List<Double>> {
             }
         }
 
-        double minRemain = 0;
+        double minRemain;
         while (maxDist > 0) {
             BlockRaycastResult rr = new BlockRaycastResult(cPos, cDist, (new Vector(x, y, z).add(direction.clone().multiply(cDist))), axis, face);
             result.add(rr);
@@ -223,10 +223,10 @@ public class Point extends DBVariable<List<Double>> {
     /**
      * TODO: This only supports up to 1x1x1 (sizes of 0.5), and then is unreliable for center blocks
      *
-     * @param direction
-     * @param size
-     * @param maxDist
-     * @return
+     * @param direction Direction
+     * @param size Size
+     * @param maxDist Max Distance
+     * @return List of block hits
      */
     public List<BlockRaycastResult> castBlocks(Vector direction, Vector size, double maxDist) {
         List<BlockRaycastResult> results = new ArrayList<>();

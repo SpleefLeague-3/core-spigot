@@ -1,8 +1,7 @@
 package com.spleefleague.core.world.game.projectile;
 
-import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.player.CorePlayer;
-import net.minecraft.server.v1_15_R1.Entity;
+import net.minecraft.world.entity.Entity;
 
 /**
  * @author NickM13

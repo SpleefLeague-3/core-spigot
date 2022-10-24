@@ -7,14 +7,12 @@ import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.util.variable.Dimension;
 import com.spleefleague.core.world.ChunkCoord;
 import com.spleefleague.core.world.FakeBlock;
-import com.spleefleague.core.world.FakeUtils;
 import com.spleefleague.core.world.FakeWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -162,7 +160,7 @@ public class BuildWorld extends FakeWorld<BuildWorldPlayer> {
     @Override
     protected boolean onBlockPunch(CorePlayer cp, BlockPosition pos) {
         FakeBlock fakeBlock = getFakeBlock(pos);
-        if (fakeBlock != null && !fakeBlock.getBlockData().getMaterial().isAir()) {
+        if (fakeBlock != null && !fakeBlock.blockData().getMaterial().isAir()) {
             return breakBlock(pos, cp);
         }
         return false;
@@ -307,7 +305,7 @@ public class BuildWorld extends FakeWorld<BuildWorldPlayer> {
                 for (int z = (int) fillBox.getLow().z; z <= fillBox.getHigh().z; z++) {
                     FakeBlock fb2 = getFakeBlock(new BlockPosition(x, y, z));
                     if (fb2 != null) {
-                        getWorld().getBlockAt(x, y, z).setBlockData(fb2.getBlockData());
+                        getWorld().getBlockAt(x, y, z).setBlockData(fb2.blockData());
                         fillBlocks.put(new BlockPosition(x, y, z), fb);
                     }
                 }

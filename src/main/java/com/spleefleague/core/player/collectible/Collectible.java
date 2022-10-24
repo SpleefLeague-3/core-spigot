@@ -10,7 +10,6 @@ import com.spleefleague.core.player.collectible.hat.Hat;
 import com.spleefleague.core.player.collectible.key.Key;
 import com.spleefleague.core.player.collectible.music.Song;
 import com.spleefleague.core.player.collectible.particles.Particles;
-import com.spleefleague.core.player.collectible.pet.Pet;
 import com.spleefleague.core.player.collectible.victory.VictoryMessage;
 import com.spleefleague.core.vendor.Vendorable;
 import com.spleefleague.core.vendor.Vendorables;

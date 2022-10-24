@@ -5,14 +5,13 @@ import com.google.gson.JsonParser;
 import com.mongodb.client.MongoCollection;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.logger.CoreLogger;
-import com.spleefleague.core.player.CoreOfflinePlayer;
-import net.minecraft.server.v1_15_R1.NBTTagCompound;
-import net.minecraft.server.v1_15_R1.NBTTagList;
-import net.minecraft.server.v1_15_R1.NBTTagString;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
@@ -54,7 +53,7 @@ public class InventoryMenuSkullManager {
     private static void loadTexture(UUID uuid) {
         Document baseDoc = new Document("identifier", uuid.toString());
         Document doc = skullCollection.find(baseDoc).first();
-        Texture texture = null;
+        Texture texture;
         if (doc != null) {
             texture = new Texture(doc.getString("value"), doc.getString("signature"));
         } else {
@@ -96,26 +95,30 @@ public class InventoryMenuSkullManager {
     }
 
     private static ItemStack getPlayerSkull(UUID uuid, Texture texture) {
-        net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(new ItemStack(Material.PLAYER_HEAD));
+        net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(new ItemStack(Material.PLAYER_HEAD));
 
-        if (!nmsStack.hasTag()) {
-            nmsStack.setTag(new NBTTagCompound());
+        CompoundTag compound = nmsStack.getTag();
+        if (compound == null) {
+            nmsStack.setTag(new CompoundTag());
+            compound = nmsStack.getTag();
         }
-        NBTTagCompound compound = nmsStack.getTag();
+        if (compound == null) {
+            return CraftItemStack.asBukkitCopy(nmsStack);
+        }
 
-        NBTTagCompound skullOwner = new NBTTagCompound();
-        skullOwner.set("Id", NBTTagString.a(uuid.toString()));
+        CompoundTag skullOwner = new CompoundTag();
+        skullOwner.putString("Id", uuid.toString());
 
-        NBTTagCompound properties = new NBTTagCompound();
-        NBTTagList textures = new NBTTagList();
-        NBTTagCompound value = new NBTTagCompound();
-        value.set("Value", NBTTagString.a(texture.value));
-        value.set("Signature", NBTTagString.a(texture.signature));
+        CompoundTag properties = new CompoundTag();
+        ListTag textures = new ListTag();
+        CompoundTag value = new CompoundTag();
+        value.putString("Value", texture.value);
+        value.putString("Signature", texture.signature);
         textures.add(value);
-        properties.set("textures", textures);
-        skullOwner.set("Properties", properties);
+        properties.put("textures", textures);
+        skullOwner.put("Properties", properties);
 
-        compound.set("SkullOwner", skullOwner);
+        compound.put("SkullOwner", skullOwner);
         nmsStack.setTag(compound);
 
         return CraftItemStack.asBukkitCopy(nmsStack);

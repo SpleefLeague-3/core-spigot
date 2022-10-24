@@ -35,12 +35,9 @@ import com.spleefleague.coreapi.infraction.Infraction;
 import com.spleefleague.coreapi.infraction.InfractionType;
 import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatChannelJoin;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.minecraft.server.v1_15_R1.EntityPlayer;
-import org.bson.Document;
+import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_15_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -50,10 +47,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.InvocationTargetException;
-import java.time.Instant;
 import java.util.*;
-import java.util.logging.Level;
 
 /**
  * @author NickM13
@@ -139,6 +133,14 @@ public class CorePlayer extends CoreOfflinePlayer {
         getPlayer().getActivePotionEffects().forEach(pe -> getPlayer().removePotionEffect(pe.getType()));
         setGameMode(GameMode.valueOf(gameMode));
         refreshHotbar();
+    }
+
+    public void setFlySpeed(float speed) {
+        getPlayer().setFlySpeed(speed);
+    }
+
+    public void setWalkSpeed(float speed) {
+        getPlayer().setWalkSpeed(speed);
     }
 
     public void onRespawn(PlayerRespawnEvent event) {
@@ -336,12 +338,16 @@ public class CorePlayer extends CoreOfflinePlayer {
      * @return Player's ping
      */
     public int getPing() {
-        try {
-            EntityPlayer entityPlayer = (EntityPlayer) getPlayer().getClass().getMethod("getHandle").invoke(getPlayer());
-            return entityPlayer.ping;
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-            return -1;
-        }
+        ServerPlayer serverPlayer = (ServerPlayer) getPlayer();
+        return serverPlayer.latency;
+//        return getPlayer().getPing();
+
+//        try {
+//            EntityPlayer entityPlayer = (EntityPlayer) getPlayer().getClass().getMethod("getHandle").invoke(getPlayer());
+//            return entityPlayer.ping;
+//        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+//            return -1;
+//        }
     }
 
     /**
@@ -871,6 +877,10 @@ public class CorePlayer extends CoreOfflinePlayer {
      */
     public final void setHeldItem(ItemStack itemStack) {
         getPlayer().getInventory().setItemInMainHand(itemStack);
+    }
+
+    public boolean isOnGround() {
+        return ((CraftPlayer) getPlayer()).isOnGround();
     }
 
     public enum ResultWhitelist {

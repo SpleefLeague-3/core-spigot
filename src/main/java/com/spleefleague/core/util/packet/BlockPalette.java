@@ -1,16 +1,12 @@
 package com.spleefleague.core.util.packet;
 
-import com.google.common.collect.Lists;
-import net.minecraft.server.v1_15_R1.Block;
-import net.minecraft.server.v1_15_R1.IBlockData;
-import net.minecraft.server.v1_15_R1.RegistryBlockID;
+import net.minecraft.core.IdMapper;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_15_R1.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.v1_19_R1.block.data.CraftBlockData;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Jonas
@@ -18,7 +14,7 @@ import java.util.Map;
 public abstract class BlockPalette {
 
     public static final BlockPalette GLOBAL = GlobalBlockPalette.instance();
-    private static final RegistryBlockID<IBlockData> REGISTRY_ID = Block.REGISTRY_ID;
+    private static final IdMapper<BlockState> REGISTRY_ID = Block.BLOCK_STATE_REGISTRY;
 
     public abstract BlockData[] decode(byte[] data);
 
@@ -39,7 +35,8 @@ public abstract class BlockPalette {
     }
 
     public static BlockData blockDataFromId(int id) {
-        IBlockData ibd = REGISTRY_ID.fromId(id);
+        BlockState ibd = REGISTRY_ID.byId(id);
+        assert ibd != null;
         return CraftBlockData.fromData(ibd);
     }
 
@@ -119,7 +116,7 @@ public abstract class BlockPalette {
             this.bitsPerBlock = bitsPerBlock;
             for (int i = 0; i < data.length; i++) {
                 int id = data[i];
-                BlockData blockData = CraftBlockData.fromData(REGISTRY_ID.fromId(id));
+                BlockData blockData = CraftBlockData.fromData(Objects.requireNonNull(REGISTRY_ID.byId(id)));
                 idToBlock.add(blockData);
                 blockToId.put(blockData, i);
             }

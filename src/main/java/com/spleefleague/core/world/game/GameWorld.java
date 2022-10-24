@@ -27,6 +27,7 @@ import com.spleefleague.core.world.game.projectile.FakeEntity;
 import com.spleefleague.core.world.game.projectile.FakeEntitySnowball;
 import com.spleefleague.core.world.game.projectile.ProjectileStats;
 import com.spleefleague.core.world.game.projectile.ProjectileWorld;
+import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -37,8 +38,8 @@ import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Snow;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -197,10 +198,10 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
     @Override
     protected boolean onBlockPunch(CorePlayer cp, BlockPosition pos) {
         FakeBlock fakeBlock = getFakeBlock(pos);
-        if (fakeBlock == null || fakeBlock.getBlockData().getMaterial().isAir()) return true;
+        if (fakeBlock == null || fakeBlock.blockData().getMaterial().isAir()) return true;
         ItemStack heldItem = cp.getPlayer().getInventory().getItemInMainHand();
         if (editable
-                && breakables.contains(fakeBlock.getBlockData().getMaterial())
+                && breakables.contains(fakeBlock.blockData().getMaterial())
                 && breakTools.contains(heldItem.getType())) {
             for (FakeWorldPlayer fwp : playerMap.values()) {
                 if (!fwp.getPlayer().equals(cp.getPlayer())) {
@@ -217,7 +218,7 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
     @Override
     public boolean breakBlock(BlockPosition pos, CorePlayer cp) {
         FakeBlock fb = getFakeBlock(pos);
-        if (fb != null && !unbreakables.contains(fb.getBlockData().getMaterial()) && super.breakBlock(pos, cp)) {
+        if (fb != null && !unbreakables.contains(fb.blockData().getMaterial()) && super.breakBlock(pos, cp)) {
             futureBlocks.remove(pos);
             if (cp != null && cp.getBattleState() == BattleState.BATTLER) {
                 cp.getBattle().onBlockBreak(cp);
@@ -267,7 +268,7 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
      */
     public boolean corrodeBlock(BlockPosition pos) {
         FakeBlock fb = getFakeBlock(pos);
-        if (fb != null && !fb.getBlockData().getMaterial().equals(Material.AIR) && !fb.equals(CORRODE_BLOCK)) {
+        if (fb != null && !fb.blockData().getMaterial().equals(Material.AIR) && !fb.equals(CORRODE_BLOCK)) {
             getPlayerMap().values().forEach(fwp -> {
                 fwp.getPlayer().spawnParticle(Particle.BLOCK_DUST, pos.toLocation(getWorld()).add(0.5, 0.5, 0.5), 20, 0.25, 0.25, 0.25, Material.PURPLE_CONCRETE_POWDER.createBlockData());
                 fwp.getPlayer().playSound(pos.toLocation(getWorld()), Sound.ENTITY_SILVERFISH_STEP, 2, 0.75f);
@@ -318,7 +319,7 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
      */
     public boolean burnBlock(BlockPosition pos, int fuel) {
         FakeBlock fb = getFakeBlock(pos);
-        if (fb != null && !fb.getBlockData().getMaterial().equals(Material.AIR)) {
+        if (fb != null && !fb.blockData().getMaterial().equals(Material.AIR)) {
             if (burningBlocks.containsKey(pos)) {
                 burningBlocks.get(pos).fuel = Math.max(burningBlocks.get(pos).fuel, fuel);
                 return false;
@@ -563,14 +564,14 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
                         setBlock(futureList.getKey(), futureBlock.fakeBlock);
                         fbit.remove();
                     } else if (futureBlock.delay < 7) {
-                        Material futureMat = futureBlock.fakeBlock.getBlockData().getMaterial();
+                        Material futureMat = futureBlock.fakeBlock.blockData().getMaterial();
                         if (futureMat.equals(Material.SNOW_BLOCK)) {
                             Snow snow = (Snow) Material.SNOW.createBlockData();
                             snow.setLayers((int) (8 - futureBlock.delay));
                             setBlock(futureList.getKey(), new FakeBlock(snow));
                         } else {
                             if (fakeBlock != null) {
-                                Material fakeMat = fakeBlock.getBlockData().getMaterial();
+                                Material fakeMat = fakeBlock.blockData().getMaterial();
                                 if (futureMat.isAir() && (fakeMat.equals(Material.SNOW) || fakeMat.equals(Material.SNOW_BLOCK))) {
                                     Snow snow = (Snow) Material.SNOW.createBlockData();
                                     snow.setLayers((int) (futureBlock.delay));
@@ -668,11 +669,11 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
             FakeEntity newEntity = (FakeEntitySnowball) entity.getStats().entityClass
                     .getDeclaredConstructor(GameWorld.class, CorePlayer.class, Location.class, ProjectileStats.class, Double.class)
                     .newInstance(this, entity.getCpShooter(), location, entity.getStats(), 1D);
-            projectiles.put(newEntity.getEntity().getUniqueID(), new GameProjectile(newEntity.getEntity(), entity.getStats()));
-            newEntity.getEntity().setMot(velocity.getX(), velocity.getY(), velocity.getZ());
+            projectiles.put(newEntity.getEntity().getUUID(), new GameProjectile(newEntity.getEntity(), entity.getStats()));
+            newEntity.getEntity().setDeltaMovement(velocity.getX(), velocity.getY(), velocity.getZ());
             newEntity.reducedStats(entity);
-            ((CraftWorld) getWorld()).getHandle().addEntity(newEntity.getEntity());
-            entity.getEntity().killEntity();
+            ((CraftWorld) getWorld()).getHandle().addFreshEntity(newEntity.getEntity());
+            entity.getEntity().kill();
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException exception) {
             CoreLogger.logError(exception);
         }
@@ -839,7 +840,7 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
                         BlockPosition pos2 = pos.add(new BlockPosition(x, y, z));
                         FakeBlock baseBlock = baseBlocks.get(pos2);
                         FakeBlock fakeBlock = getFakeBlock(pos2);
-                        if (baseBlock != null && (fakeBlock == null || fakeBlock.getBlockData().getMaterial().isAir())) {
+                        if (baseBlock != null && (fakeBlock == null || fakeBlock.blockData().getMaterial().isAir())) {
                             setBlock(pos2, baseBlock);
                             baseBreakTimes.remove(pos);
                         }
@@ -980,7 +981,7 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
     private boolean isConnected(BlockPosition pos) {
         for (BlockPosition relative : relatives) {
             FakeBlock fb = getFakeBlock(pos.add(relative));
-            if (fb != null && !fb.getBlockData().getMaterial().isAir()) {
+            if (fb != null && !fb.blockData().getMaterial().isAir()) {
                 return true;
             }
         }
@@ -1033,21 +1034,16 @@ public class GameWorld extends ProjectileWorld<GameWorldPlayer> {
 
     public void onProjectileBlockHit(CorePlayer shooter, BlockRaycastResult blockRaycastResult, ProjectileStats projectileStats) {
         switch (projectileStats.breakStyle) {
-            case DEFAULT:
-                shooter.getStatistics().add("splegg", "blocksBroken", breakBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
-                break;
-            case CORROSIVE:
-                shooter.getStatistics().add("splegg", "blocksCorroded", corrodeBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
-                break;
-            case FIRE:
-                shooter.getStatistics().add("splegg", "blocksBurnt", burnBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
-                break;
-            case ICE:
-                shooter.getStatistics().add("splegg", "blocksIced", iceBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
-                break;
-            case REGENERATE:
-                shooter.getStatistics().add("splegg", "blocksEndered", breakRegenBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
-                break;
+            case DEFAULT ->
+                    shooter.getStatistics().add("splegg", "blocksBroken", breakBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
+            case CORROSIVE ->
+                    shooter.getStatistics().add("splegg", "blocksCorroded", corrodeBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
+            case FIRE ->
+                    shooter.getStatistics().add("splegg", "blocksBurnt", burnBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
+            case ICE ->
+                    shooter.getStatistics().add("splegg", "blocksIced", iceBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
+            case REGENERATE ->
+                    shooter.getStatistics().add("splegg", "blocksEndered", breakRegenBlocks(blockRaycastResult.getBlockPos(), projectileStats.breakRadius, projectileStats.breakPercent));
         }
     }
 

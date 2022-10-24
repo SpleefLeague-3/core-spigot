@@ -10,7 +10,6 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.spleefleague.core.Core;
-import com.spleefleague.core.menu.InventoryMenuItemHotbar;
 import com.spleefleague.core.menu.hotbars.SLMainHotbar;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.util.variable.Warp;
@@ -18,11 +17,12 @@ import com.spleefleague.core.vendor.Artisans;
 import com.spleefleague.core.world.global.lock.GlobalLock;
 import com.spleefleague.core.world.global.vehicle.GlobalVehicle;
 import com.spleefleague.core.world.global.vehicle.LaunchPad;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v1_15_R1.block.CraftSign;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,7 +30,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
-import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.potion.PotionEffectType;
@@ -38,6 +37,7 @@ import org.bukkit.util.Vector;
 import org.spigotmc.event.entity.EntityDismountEvent;
 
 import java.util.*;
+import java.util.List;
 
 /**
  * Player listener for out of game actions
@@ -52,11 +52,11 @@ public class EnvironmentListener implements Listener {
      * @param sign Sign
      * @return Vector
      */
-    private Vector getSignVector(CraftSign sign) {
+    private Vector getSignVector(Sign sign) {
         Vector vec = new Vector();
-        vec.setX(Double.parseDouble(sign.getLine(1)));
-        vec.setY(Double.parseDouble(sign.getLine(2)));
-        vec.setZ(Double.parseDouble(sign.getLine(3)));
+        vec.setX(Double.parseDouble(((java.awt.TextComponent) sign.line(1)).getText()));
+        vec.setY(Double.parseDouble(((java.awt.TextComponent) sign.line(2)).getText()));
+        vec.setZ(Double.parseDouble(((java.awt.TextComponent) sign.line(3)).getText()));
         return vec;
     }
 
@@ -79,12 +79,10 @@ public class EnvironmentListener implements Listener {
     }
 
     private void stopHorizontalMovement(PlayerMoveEvent event) {
-        if (event.getTo() != null) {
-            Location newLoc = event.getTo().clone();
-            newLoc.setX(event.getFrom().getX());
-            newLoc.setZ(event.getFrom().getZ());
-            event.setTo(newLoc);
-        }
+        Location newLoc = event.getTo().clone();
+        newLoc.setX(event.getFrom().getX());
+        newLoc.setZ(event.getFrom().getZ());
+        event.setTo(newLoc);
     }
 
     private final Map<UUID, Long> jumpCooldowns = new HashMap<>();
@@ -97,13 +95,12 @@ public class EnvironmentListener implements Listener {
      */
     @EventHandler
     public void onPlayerMoveSign(PlayerMoveEvent event) {
-        if (event.getTo() == null) return;
         CorePlayer corePlayer = Core.getInstance().getPlayers().get(event.getPlayer());
         for (Block block : getBlocksBelow(event.getTo().getBlock())) {
             BlockState state = block.getState();
-            if (state instanceof CraftSign) {
-                CraftSign sign = (CraftSign) state;
-                switch (sign.getLine(0).toLowerCase()) {
+            if (state instanceof Sign) {
+                Sign sign = (Sign) block;
+                switch (((java.awt.TextComponent) sign.line(1)).getText().toLowerCase()) {
                     case "[jump_1]":
                         if ((!jumpCooldowns.containsKey(event.getPlayer().getUniqueId())
                                 || jumpCooldowns.get(event.getPlayer().getUniqueId()) < System.currentTimeMillis())
@@ -288,7 +285,7 @@ public class EnvironmentListener implements Listener {
     private static final Set<EntityType> DAMAGEABLE_MOBS = Sets.newHashSet(EntityType.BLAZE, EntityType.BOAT, EntityType.CAVE_SPIDER,
             EntityType.CREEPER, EntityType.DROWNED, EntityType.ELDER_GUARDIAN, EntityType.ENDERMAN, EntityType.ENDERMITE, EntityType.ENDER_DRAGON,
             EntityType.EVOKER, EntityType.GHAST, EntityType.GIANT, EntityType.GUARDIAN, EntityType.HUSK, EntityType.ILLUSIONER, EntityType.MAGMA_CUBE,
-            EntityType.MINECART, EntityType.PHANTOM, EntityType.PIG_ZOMBIE, EntityType.PILLAGER, EntityType.RAVAGER, EntityType.SHULKER,
+            EntityType.MINECART, EntityType.PHANTOM, EntityType.PIGLIN, EntityType.ZOMBIFIED_PIGLIN, EntityType.PIGLIN_BRUTE, EntityType.PILLAGER, EntityType.RAVAGER, EntityType.SHULKER,
             EntityType.SILVERFISH, EntityType.SKELETON, EntityType.SLIME, EntityType.SPIDER, EntityType.VEX, EntityType.VINDICATOR, EntityType.WITCH,
             EntityType.WITHER, EntityType.WITHER_SKELETON, EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER);
 
@@ -299,18 +296,19 @@ public class EnvironmentListener implements Listener {
      */
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Projectile) {
-            Projectile projectile = (Projectile) event.getDamager();
-            if (projectile.getShooter() instanceof Player) {
-                if (!Core.getInstance().getPlayers().get((Player) projectile.getShooter()).canBuild()) {
-                    if (!DAMAGEABLE_MOBS.contains(event.getEntityType()))
+        if (event.getDamager() instanceof Projectile projectile) {
+            if (projectile.getShooter() instanceof Player player) {
+                if (!Core.getInstance().getPlayers().get(player).canBuild()) {
+                    if (!DAMAGEABLE_MOBS.contains(event.getEntityType())) {
                         event.setCancelled(true);
+                    }
                 }
             }
-        } else if (event.getDamager() instanceof Player) {
-            if (!Core.getInstance().getPlayers().get((Player) event.getDamager()).canBuild()) {
-                if (!DAMAGEABLE_MOBS.contains(event.getEntityType()))
+        } else if (event.getDamager() instanceof Player player) {
+            if (!Core.getInstance().getPlayers().get(player).canBuild()) {
+                if (!DAMAGEABLE_MOBS.contains(event.getEntityType())) {
                     event.setCancelled(true);
+                }
             } else {
                 Artisans.punchEvent(event);
             }
@@ -363,8 +361,7 @@ public class EnvironmentListener implements Listener {
      */
     @EventHandler
     public void onPlayerFoodChange(FoodLevelChangeEvent event) {
-        if (event.getEntity() instanceof Player) {
-            Player p = (Player) event.getEntity();
+        if (event.getEntity() instanceof Player p) {
             p.setFoodLevel(20);
             event.setCancelled(true);
         }
@@ -389,7 +386,7 @@ public class EnvironmentListener implements Listener {
             CreatureSpawnEvent.SpawnReason.DROWNED, CreatureSpawnEvent.SpawnReason.DISPENSE_EGG, CreatureSpawnEvent.SpawnReason.EGG, CreatureSpawnEvent.SpawnReason.ENDER_PEARL, CreatureSpawnEvent.SpawnReason.EXPLOSION, CreatureSpawnEvent.SpawnReason.INFECTION,
             CreatureSpawnEvent.SpawnReason.JOCKEY, CreatureSpawnEvent.SpawnReason.LIGHTNING, CreatureSpawnEvent.SpawnReason.MOUNT, CreatureSpawnEvent.SpawnReason.NATURAL, CreatureSpawnEvent.SpawnReason.NETHER_PORTAL, CreatureSpawnEvent.SpawnReason.OCELOT_BABY,
             CreatureSpawnEvent.SpawnReason.PATROL, CreatureSpawnEvent.SpawnReason.RAID, CreatureSpawnEvent.SpawnReason.REINFORCEMENTS, CreatureSpawnEvent.SpawnReason.SHEARED, /*SpawnReason.SHOULDER_ENTITY,*/ CreatureSpawnEvent.SpawnReason.SILVERFISH_BLOCK,
-            CreatureSpawnEvent.SpawnReason.SLIME_SPLIT, CreatureSpawnEvent.SpawnReason.SPAWNER, /*SpawnReason.SPAWNER_EGG,*/ CreatureSpawnEvent.SpawnReason.TRAP, CreatureSpawnEvent.SpawnReason.VILLAGE_DEFENSE, CreatureSpawnEvent.SpawnReason.VILLAGE_INVASION);
+            CreatureSpawnEvent.SpawnReason.SLIME_SPLIT, CreatureSpawnEvent.SpawnReason.SPAWNER, CreatureSpawnEvent.SpawnReason.TRAP, CreatureSpawnEvent.SpawnReason.VILLAGE_DEFENSE, CreatureSpawnEvent.SpawnReason.VILLAGE_INVASION);
 
     /**
      * Prevent mobs from spawning naturally

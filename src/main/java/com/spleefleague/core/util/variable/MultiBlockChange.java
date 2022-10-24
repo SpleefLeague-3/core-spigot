@@ -11,7 +11,7 @@ import org.bukkit.Material;
 public class MultiBlockChange {
 
     private static final FakeBlock AIR = new FakeBlock(Material.AIR.createBlockData());
-    private static final WrappedBlockData WRAPPED_AIR = WrappedBlockData.createData(AIR.getBlockData());
+    private static final WrappedBlockData WRAPPED_AIR = WrappedBlockData.createData(AIR.blockData());
 
     public final short pos;
     public final FakeBlock fakeBlock;
@@ -21,7 +21,7 @@ public class MultiBlockChange {
     public MultiBlockChange(short pos, FakeBlock fakeBlock) {
         this.pos = pos;
         this.fakeBlock = fakeBlock;
-        this.blockData = WrappedBlockData.createData(fakeBlock.getBlockData().getMaterial());
+        this.blockData = WrappedBlockData.createData(fakeBlock.blockData().getMaterial());
         this.air = false;
     }
 

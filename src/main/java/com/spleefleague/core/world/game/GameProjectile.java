@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.spleefleague.core.world.game.projectile.ProjectileStats;
-import net.minecraft.server.v1_15_R1.AxisAlignedBB;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -23,14 +24,14 @@ import org.bukkit.util.Vector;
 public class GameProjectile {
 
     Point lastLoc = null;
-    net.minecraft.server.v1_15_R1.Entity entity;
+    Entity entity;
     Player shooter;
     ProjectileStats type;
     int bounces = 1;
     double bouncePower = 0.3;
     double drag = 1;
 
-    public GameProjectile(net.minecraft.server.v1_15_R1.Entity entity, ProjectileStats type) {
+    public GameProjectile(Entity entity, ProjectileStats type) {
         this.entity = entity;
         this.type = type;
         this.bounces = type.bounces;
@@ -66,13 +67,13 @@ public class GameProjectile {
         this.shooter = shooter;
     }
 
-    public net.minecraft.server.v1_15_R1.Entity getEntity() {
+    public Entity getEntity() {
         return entity;
     }
 
     public List<BlockRaycastResult> cast() {
         if (lastLoc != null) {
-            Vector pos = new Vector(entity.getPositionVector().getX(), entity.getPositionVector().getY(), entity.getPositionVector().getZ());
+            Vector pos = new Vector(entity.getX(), entity.getY(), entity.getZ());
             Vector direction = pos.subtract(lastLoc.toVector());
             setLastLoc();
             return lastLoc.castBlocks(direction, direction.length());
@@ -83,7 +84,7 @@ public class GameProjectile {
     }
 
     public void setLastLoc() {
-        AxisAlignedBB bb = entity.getBoundingBox();
+        AABB bb = entity.getBoundingBox();
         lastLoc = new Point(
                 (bb.maxX - bb.minX) / 2D + bb.minX,
                 (bb.maxY - bb.minY) / 2D + bb.minY,

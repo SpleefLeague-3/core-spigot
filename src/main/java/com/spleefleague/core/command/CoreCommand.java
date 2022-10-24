@@ -27,21 +27,21 @@ import javax.annotation.Nullable;
 import com.spleefleague.coreapi.chat.ChatColor;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.v1_19_R1.command.CraftBlockCommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import com.spleefleague.core.util.variable.TpCoord;
-import net.minecraft.server.v1_15_R1.CommandListenerWrapper;
-import net.minecraft.server.v1_15_R1.IChatBaseComponent;
 import org.bukkit.command.Command;
-import org.bukkit.craftbukkit.v1_15_R1.command.CraftBlockCommandSender;
 
 /**
  * @author NickM13
@@ -597,7 +597,7 @@ public class CoreCommand extends Command {
         boolean success = false;
         BlockCommandSender bcs = null;
         CraftBlockCommandSender cbcs;
-        CommandListenerWrapper listener = null;
+        CommandSourceStack listener = null;
         Location loc;
         if (cs instanceof Player) {
             cp = Core.getInstance().getPlayers().get(cs.getName());
@@ -896,9 +896,9 @@ public class CoreCommand extends Command {
                                     && bcs != null) {
                                 success = (Boolean) methodInfo.method.invoke(this, params.toArray(new Object[0]));
                                 if (success) {
-                                    listener.a(3);
+                                    //listener.a(3);
                                 } else {
-                                    listener.sendFailureMessage(IChatBaseComponent.ChatSerializer.a("Failure"));
+                                    listener.sendFailure(Component.literal("Failure"));
                                 }
                                 return success;
                             } else {
@@ -933,7 +933,7 @@ public class CoreCommand extends Command {
             error(cp, CoreError.UNABLE);
         }
         if (bcs != null) {
-            listener.sendFailureMessage(IChatBaseComponent.ChatSerializer.a("Failure"));
+            listener.sendFailure(Component.literal("Failure"));
             //listener.a(3);
         }
         return true;

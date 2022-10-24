@@ -3,13 +3,13 @@ package com.spleefleague.core.world.game.projectile;
 import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.util.variable.Point;
 import com.spleefleague.core.world.game.GameWorld;
-import net.minecraft.server.v1_15_R1.EntityHuman;
-import net.minecraft.server.v1_15_R1.EntityThrownTrident;
-import net.minecraft.server.v1_15_R1.EntityTypes;
-import net.minecraft.server.v1_15_R1.MovingObjectPosition;
-import net.minecraft.server.v1_15_R1.Vec3D;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ThrownTrident;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
@@ -18,7 +18,7 @@ import java.util.Random;
  * @author NickM13
  * @since 5/19/2020
  */
-public class FakeEntityTrident extends EntityThrownTrident {
+public class FakeEntityTrident extends ThrownTrident {
 
     private final GameWorld gameWorld;
     private final ProjectileStats projectileStats;
@@ -26,7 +26,7 @@ public class FakeEntityTrident extends EntityThrownTrident {
     private int bounces;
 
     public FakeEntityTrident(GameWorld gameWorld, CoreOfflinePlayer shooter, ProjectileStats projectileStats) {
-        super(EntityTypes.TRIDENT, ((CraftWorld) gameWorld.getWorld()).getHandle());
+        super(EntityType.TRIDENT, ((CraftWorld) gameWorld.getWorld()).getHandle());
 
         this.gameWorld = gameWorld;
         this.projectileStats = projectileStats;
@@ -35,7 +35,8 @@ public class FakeEntityTrident extends EntityThrownTrident {
                 .add(shooter.getPlayer().getLocation().getDirection()
                         .crossProduct(new Vector(0, 1, 0)).normalize()
                         .multiply(0.15).add(new Vector(0, -0.15, 0)));
-        setPositionRotation(handLocation.getX(), handLocation.getY(), handLocation.getZ(), handLocation.getPitch(), handLocation.getYaw());
+        setPos(handLocation.getX(), handLocation.getY(), handLocation.getZ());
+        setRot(handLocation.getPitch(), handLocation.getYaw());
 
         Random rand = new Random();
         Location lookLoc = shooter.getPlayer().getLocation().clone();
@@ -46,30 +47,31 @@ public class FakeEntityTrident extends EntityThrownTrident {
             lookLoc.setPitch(lookLoc.getPitch() + rand.nextInt(projectileStats.vSpread) - (projectileStats.vSpread / 2.f));
         }
         Vector direction = lookLoc.getDirection().normalize().multiply(projectileStats.fireRange * 0.25);
-        setMot(new Vec3D(direction.getX(), direction.getY(), direction.getZ()));
+        setDeltaMovement(new Vec3(direction.getX(), direction.getY(), direction.getZ()));
 
         setNoGravity(!projectileStats.gravity);
         this.bounces = projectileStats.bounces;
-        this.noclip = projectileStats.noClip;
+        this.noPhysics = projectileStats.noClip;
         this.inGround = true;
     }
 
     @Override
     public void tick() {
         super.tick();
-        lastLoc = new Point(getPositionVector());
+        lastLoc = new Point(getX(), getY(), getZ());
     }
 
+
     @Override
-    protected void a(MovingObjectPosition var0) {
-        if (!noclip) {
-            super.a(var0);
+    protected void onHit(HitResult movingobjectposition) {
+        if (!noPhysics) {
+            super.onHit(movingobjectposition);
         }
     }
 
     @Override
-    public void pickup(EntityHuman entityhuman) {
-
+    protected boolean tryPickup(Player player) {
+        return super.tryPickup(player);
     }
 
 }

@@ -15,13 +15,15 @@ import com.spleefleague.core.world.build.BuildWorld;
 import com.spleefleague.core.world.global.GlobalWorld;
 import com.spleefleague.core.util.PacketUtils;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
-import net.minecraft.server.v1_15_R1.EnumDirection;
-import net.minecraft.server.v1_15_R1.ItemStack;
-import net.minecraft.server.v1_15_R1.PacketPlayInUseItem;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -40,14 +42,14 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
 
     public static void init() {
         BuildWorld.init();
-        FakeBlock.init();
         GlobalWorld.init();
 
         Core.getInstance().addTask(Bukkit.getScheduler().runTaskTimer(Core.getInstance(), () -> {
             Core.getInstance().getPlayers().getAllLocal().forEach(cp -> {
                 if (FakeUtils.isOnGround(cp)) {
-                    net.minecraft.server.v1_15_R1.Entity entity = ((CraftEntity) cp.getPlayer()).getHandle();
-                    entity.setMot(entity.getMot().getX(), 0, entity.getMot().getZ());
+                    Entity entity = ((CraftEntity) cp.getPlayer()).getHandle();
+
+                    entity.setDeltaMovement(entity.getDeltaMovement().x, 0, entity.getDeltaMovement().z);
                 }
             });
         }, 10, 2));
@@ -93,11 +95,14 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
             public void onPacketReceiving(PacketEvent event) {
                 CorePlayer cp = Core.getInstance().getPlayers().get(event.getPlayer());
                 if (cp == null) return;
-                PacketPlayInUseItem packetPlayInUseItem = (PacketPlayInUseItem) event.getPacket().getHandle();
-                net.minecraft.server.v1_15_R1.BlockPosition nmsBlockPosition = packetPlayInUseItem.c().getBlockPosition();
-                BlockPosition blockPosition = new BlockPosition(nmsBlockPosition.getX(), nmsBlockPosition.getY(), nmsBlockPosition.getZ());
-                EnumDirection direction = packetPlayInUseItem.c().getDirection();
-                BlockPosition blockRelative = blockPosition.add(new BlockPosition(direction.getAdjacentX(), direction.getAdjacentY(), direction.getAdjacentZ()));
+                ServerboundUseItemOnPacket packet = (ServerboundUseItemOnPacket) event.getPacket().getHandle();
+                BlockPos bp = packet.getHitResult().getBlockPos();
+                Direction direction = packet.getHitResult().getDirection();
+                BlockPos br = bp.relative(direction);
+
+                BlockPosition blockPosition = new BlockPosition(bp.getX(), bp.getY(), bp.getZ());
+                BlockPosition blockRelative = new BlockPosition(br.getX(), br.getY(), br.getZ());
+
                 Iterator<FakeWorld<?>> fit = cp.getFakeWorlds();
                 while (fit.hasNext()) {
                     FakeWorld<?> fakeWorld = fit.next();
@@ -541,7 +546,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
      */
     public final boolean isBlockSolid(BlockPosition pos) {
         FakeBlock fb = getFakeBlock(pos);
-        return fb != null && !fb.getBlockData().getMaterial().equals(Material.AIR);
+        return fb != null && !fb.blockData().getMaterial().equals(Material.AIR);
     }
 
     @SuppressWarnings("unused")
@@ -623,7 +628,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
             ChunkCoord chunkCoord = ChunkCoord.fromBlockPos(entry.getKey());
             short relPos = getChunkRelativePos(entry.getKey());
             blockChanges.putIfAbsent(chunkCoord, new ArrayList<>());
-            if (entry.getValue().getBlockData().getMaterial().isAir()) {
+            if (entry.getValue().blockData().getMaterial().isAir()) {
                 blockChanges.get(chunkCoord).add(new MultiBlockChange(relPos));
             } else {
                 blockChanges.get(chunkCoord).add(new MultiBlockChange(relPos, entry.getValue()));
@@ -653,7 +658,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
             ChunkCoord chunkCoord = ChunkCoord.fromBlockPos(entry.getKey());
             short relPos = getChunkRelativePos(entry.getKey());
             blockChanges.putIfAbsent(chunkCoord, new ArrayList<>());
-            if (entry.getValue().getBlockData().getMaterial().isAir()) {
+            if (entry.getValue().blockData().getMaterial().isAir()) {
                 blockChanges.get(chunkCoord).add(new MultiBlockChange(relPos));
             } else {
                 blockChanges.get(chunkCoord).add(new MultiBlockChange(relPos, entry.getValue()));
@@ -715,7 +720,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
             ChunkCoord chunkCoord = ChunkCoord.fromBlockPos(pos);
             short relPos = getChunkRelativePos(pos);
             FakeBlock fb = fakeChunks.get(chunkCoord).get(relPos);
-            if (fb != null && !fb.getBlockData().getMaterial().isAir()) {
+            if (fb != null && !fb.blockData().getMaterial().isAir()) {
                 if (!blockChanges.containsKey(chunkCoord)) {
                     blockChanges.put(chunkCoord, new ArrayList<>());
                 }
@@ -740,7 +745,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
         Set<BlockPosition> prevBlocks = new HashSet<>();
         for (Map.Entry<BlockPosition, FakeBlock> block : blocks.entrySet()) {
             FakeBlock fakeBlock = getFakeBlock(block.getKey());
-            if ((fakeBlock == null || fakeBlock.getBlockData().getMaterial().isAir()) && getWorld().getBlockAt(block.getKey().toLocation(getWorld())).getType().isAir()) {
+            if ((fakeBlock == null || fakeBlock.blockData().getMaterial().isAir()) && getWorld().getBlockAt(block.getKey().toLocation(getWorld())).getType().isAir()) {
                 prevBlocks.add(block.getKey());
                 setBlock(block.getKey(), block.getValue());
             }
@@ -828,9 +833,9 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
      */
     public boolean breakBlock(BlockPosition pos, CorePlayer cp) {
         FakeBlock fakeBlock = getFakeBlock(pos);
-        if (fakeBlock != null && !fakeBlock.getBlockData().getMaterial().isAir()) {
+        if (fakeBlock != null && !fakeBlock.blockData().getMaterial().isAir()) {
             getPlayerMap().values().forEach(fwp -> {
-                fwp.getPlayer().spawnParticle(Particle.BLOCK_DUST, pos.toLocation(world).add(0.5, 0.5, 0.5), 20, 0.25, 0.25, 0.25, fakeBlock.getBlockData());
+                fwp.getPlayer().spawnParticle(Particle.BLOCK_DUST, pos.toLocation(world).add(0.5, 0.5, 0.5), 20, 0.25, 0.25, 0.25, fakeBlock.blockData());
                 if (cp == null || !cp.equals(fwp.getCorePlayer())) {
                     fwp.getPlayer().playSound(pos.toLocation(world), fakeBlock.getBreakSound(), 1, 1);
                 }
@@ -852,7 +857,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
     public boolean placeBlock(BlockPosition pos, Material material, CorePlayer cp) {
         FakeBlock fakeBlock = getFakeBlock(pos);
         if ((fakeBlock == null
-                || fakeBlock.getBlockData().getMaterial().isAir())
+                || fakeBlock.blockData().getMaterial().isAir())
                 && getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()).isEmpty()) {
             FakeBlock placed = new FakeBlock(material.createBlockData());
             setBlock(pos, placed);
@@ -883,7 +888,7 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
         while (it.hasNext()) {
             FakeWorld<?> fakeWorld = it.next();
             if (fakeWorld.getWorld().equals(cp.getPlayer().getWorld()) && (fakeBlock = fakeWorld.getFakeBlock(pos)) != null) {
-                return fakeBlock.getBlockData();
+                return fakeBlock.blockData();
             }
         }
         return Objects.requireNonNull(cp.getLocation().getWorld()).getBlockAt(pos.getX(), pos.getY(), pos.getZ()).getBlockData();
