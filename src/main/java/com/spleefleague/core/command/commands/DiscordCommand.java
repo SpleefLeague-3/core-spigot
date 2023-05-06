@@ -14,9 +14,9 @@ import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 import com.spleefleague.core.settings.Settings;
 import com.spleefleague.coreapi.chat.ChatColor;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * @author NickM13
@@ -30,11 +30,12 @@ public class DiscordCommand extends CoreCommand {
 
     @CommandAnnotation
     public void discord(CorePlayer sender) {
-        TextComponent text = new TextComponent("Join us on discord: ");
-        text.addExtra(new ComponentBuilder(ChatColor.BLUE + Settings.getDiscord().getUrl())
-                .event(new ClickEvent(ClickEvent.Action.OPEN_URL, Settings.getDiscord().getUrl()))
-                .create()[0]);
-        success(sender, text);
+        Component discordComponent = Component.text(Settings.getDiscord().getUrl())
+                .color(NamedTextColor.BLUE)
+                .clickEvent(ClickEvent.openUrl(Settings.getDiscord().getUrl()));
+        Component component = Component.text("Join us on discord: ")
+                .append(discordComponent);
+        success(sender, component);
     }
 
     @CommandAnnotation(minRank = "DEVELOPER")

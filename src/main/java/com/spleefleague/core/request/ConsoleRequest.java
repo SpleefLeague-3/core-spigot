@@ -7,6 +7,7 @@
 package com.spleefleague.core.request;
 
 import com.spleefleague.core.player.CorePlayer;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 
@@ -20,7 +21,7 @@ public class ConsoleRequest extends Request {
     protected BiConsumer<CorePlayer, String> action;
     protected String name;
 
-    public ConsoleRequest(BiConsumer<CorePlayer, String> action, CorePlayer receiver, BaseComponent tag, String name) {
+    public ConsoleRequest(BiConsumer<CorePlayer, String> action, CorePlayer receiver, Component tag, String name) {
         super(receiver, tag);
         this.name = name;
         this.action = action;
@@ -37,7 +38,7 @@ public class ConsoleRequest extends Request {
 
     @Override
     public void decline() {
-        receiver.sendMessage(tag, new TextComponent("You have declined " + name + " request"));
+        receiver.sendMessage(tag + "You have declined " + name + " request");
     }
 
     @Override

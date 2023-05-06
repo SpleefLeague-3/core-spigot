@@ -13,14 +13,23 @@ public class CoreLogger {
 
     public static void logError(String msg) {
         Core.getInstance().getLogger().log(Level.SEVERE, msg);
+        for (StackTraceElement element : new Throwable().getStackTrace()) {
+            Core.getInstance().getLogger().log(Level.SEVERE, element.toString());
+        }
     }
 
     public static void logError(Throwable throwable) {
         Core.getInstance().getLogger().log(Level.SEVERE, null, throwable);
+        for (StackTraceElement element : throwable.getStackTrace()) {
+            Core.getInstance().getLogger().log(Level.SEVERE, element.toString());
+        }
     }
 
     public static void logError(String msg, Throwable throwable) {
         Core.getInstance().getLogger().log(Level.SEVERE, msg, throwable);
+        for (StackTraceElement element : throwable.getStackTrace()) {
+            Core.getInstance().getLogger().log(Level.SEVERE, element.toString());
+        }
     }
 
     public static void logWarning(@Nullable String msg) {

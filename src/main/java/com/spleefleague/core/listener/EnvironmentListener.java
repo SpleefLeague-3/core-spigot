@@ -14,10 +14,9 @@ import com.spleefleague.core.menu.hotbars.SLMainHotbar;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.util.variable.Warp;
 import com.spleefleague.core.vendor.Artisans;
-import com.spleefleague.core.world.global.lock.GlobalLock;
-import com.spleefleague.core.world.global.vehicle.GlobalVehicle;
-import com.spleefleague.core.world.global.vehicle.LaunchPad;
-import net.kyori.adventure.text.TextComponent;
+import com.spleefleague.core.world.projectile.global.lock.GlobalLock;
+import com.spleefleague.core.world.projectile.global.vehicle.GlobalVehicle;
+import com.spleefleague.core.world.projectile.global.vehicle.LaunchPad;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -220,6 +219,7 @@ public class EnvironmentListener implements Listener {
     /**
      * @param event Event
      */
+    /*
     @EventHandler
     public void onPlayerDismount(EntityDismountEvent event) {
         if (event.getEntity() instanceof Player) {
@@ -227,6 +227,7 @@ public class EnvironmentListener implements Listener {
             GlobalVehicle.remove(event.getDismounted().getEntityId());
         }
     }
+    */
 
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {

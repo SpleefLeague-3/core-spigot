@@ -9,8 +9,8 @@ import org.bukkit.util.Vector;
  */
 public class EntityRaycastResult extends RaycastResult {
 
-    private Entity entity;
-    private Vector offset;
+    private final Entity entity;
+    private final Vector offset;
 
     public EntityRaycastResult(Double distance, Vector intersection, Entity entity) {
         super(distance, intersection);

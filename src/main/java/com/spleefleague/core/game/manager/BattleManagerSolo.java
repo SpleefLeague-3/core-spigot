@@ -38,7 +38,7 @@ public class BattleManagerSolo extends BattleManager {
         for (CorePlayer cp : players) {
             Core.getInstance().getPartyManager().leave(cp);
             if (!cp.canJoinBattle()) {
-                CoreLogger.logError("Player " + cp.getDisplayName() + " is already in a battle!", null);
+                CoreLogger.logError("Player " + cp.getDisplayName() + " is already in a battle!");
                 Core.getInstance().unqueuePlayerGlobally(cp);
                 return;
             }

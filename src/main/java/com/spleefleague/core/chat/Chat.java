@@ -8,6 +8,9 @@ package com.spleefleague.core.chat;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -20,7 +23,12 @@ import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatConsole
 import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatFriend;
 import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatPlayer;
 import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatTell;
-import net.md_5.bungee.api.chat.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.title.Title;
 
 /**
  * @author NickM13
@@ -55,12 +63,6 @@ public class Chat {
             TICKET_ISSUE = ChatColor.GREEN + "",
             SCOREBOARD_DEFAULT = ChatColor.WHITE + "";
 
-    private static final Pattern URL_PATTERN = Pattern.compile("^(?:(https?)://)?([-\\w_\\.]{2,}\\.[a-z]{2,4})(/\\S*)?$");
-
-    public static Pattern getUrlPattern() {
-        return URL_PATTERN;
-    }
-
     public static ChatColor getColor(String color) {
         return chatColors.get(color);
     }
@@ -74,79 +76,59 @@ public class Chat {
 
     private static class FormattedPlayerMessage {
 
-        TextComponent textComponent;
+        Component component;
         boolean containsUrl;
 
-        public FormattedPlayerMessage(TextComponent textComponent, boolean containsUrl) {
-            this.textComponent = textComponent;
+        public FormattedPlayerMessage(Component component, boolean containsUrl) {
+            this.component = component;
             this.containsUrl = containsUrl;
         }
 
     }
 
-    private static FormattedPlayerMessage formatPlayerMessage(String message, TextComponent baseFormat) {
-        TextComponent textComponent = baseFormat.duplicate();
+    public static FormattedPlayerMessage formatPlayerMessage(String message, Component baseFormat) {
+        Pattern pattern = Pattern.compile(":(.*?):|(https?://[\\w.-]+(?:\\.[\\w\\-]+)+[/\\w\\-.,@?^=%&:/~+#]*[/?#][\\w\\-.,@?^=%&:/~+#])");
+        Matcher matcher = pattern.matcher(message);
+        Component result = Component.empty().append(baseFormat);
 
-        Matcher urlMatcher = URL_PATTERN.matcher(message);
-        StringBuilder builder = new StringBuilder();
-        TextComponent component;
+        int lastEnd = 0;
         boolean url = false;
-        for (int i = 0; i < message.length(); i++) {
-            char c = message.charAt(i);
-            if (c == ':') {
-                int pos = message.indexOf(':', i + 1);
-                if (pos != -1) {
-                    String str = message.substring(i + 1, pos);
-                    String emote = ChatEmoticons.getEmoticons().get(str);
-                    if (emote != null) {
-                        if (builder.length() > 0) {
-                            component = new TextComponent(baseFormat);
-                            component.setText(builder.toString());
-                            textComponent.addExtra(component);
-                            builder = new StringBuilder();
-                        }
+        while (matcher.find()) {
+            String beforeMatch = message.substring(lastEnd, matcher.start());
+            String matchedEmote = matcher.group(1);
+            String matchedUrl = matcher.group(2);
 
-                        component = new TextComponent(emote);
-                        component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(":" + str + ":").create()));
-                        component.setColor(net.md_5.bungee.api.ChatColor.RESET);
-                        textComponent.addExtra(component);
-                        i = pos;
-                        continue;
-                    }
+            result = result.append(Component.text(beforeMatch));
+
+            if (matchedEmote != null) {
+                String emote = ChatEmoticons.getEmoticons().get(matchedEmote);
+
+                if (emote != null) {
+                    Component hoverComponent = Component.text(matchedEmote);
+                    HoverEvent<Component> hoverEvent = HoverEvent.showText(hoverComponent);
+                    Component customComponent = Component.text(emote).hoverEvent(hoverEvent);
+
+                    result = result.append(customComponent);
+                } else {
+                    result = result.append(Component.text(":" + matchedEmote + ":"));
                 }
-            } else {
-                int pos = message.indexOf(' ', i);
-                if (pos == -1) {
-                    pos = message.length();
-                }
-                if (urlMatcher.region(i, pos).find()) {
+            } else if (matchedUrl != null) {
+                try {
+                    URL uri = new URL(matchedUrl);
+                    ClickEvent clickEvent = ClickEvent.openUrl(uri);
+                    Component urlComponent = Component.text(matchedUrl).clickEvent(clickEvent);
+                    result = result.append(urlComponent);
                     url = true;
-
-                    if (builder.length() > 0) {
-                        component = new TextComponent(baseFormat);
-                        component.setText(builder.toString());
-                        textComponent.addExtra(component);
-                        builder = new StringBuilder();
-                    }
-
-                    String urlString = message.substring(i, pos);
-                    component = new TextComponent(baseFormat);
-                    component.setText(urlString);
-                    component.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, urlString.startsWith("http") ? urlString : "http://" + urlString));
-                    textComponent.addExtra(component);
-                    i = pos - 1;
-                    continue;
+                } catch (MalformedURLException e) {
+                    result = result.append(Component.text(matchedUrl));
                 }
             }
-            builder.append(c);
-        }
-        if (builder.length() > 0) {
-            component = new TextComponent(baseFormat);
-            component.setText(builder.toString());
-            textComponent.addExtra(component);
-        }
 
-        return new FormattedPlayerMessage(textComponent, url);
+            lastEnd = matcher.end();
+        }
+        result = result.append(Component.text(message.substring(lastEnd)));
+
+        return new FormattedPlayerMessage(result, url);
     }
 
     /**
@@ -281,14 +263,13 @@ public class Chat {
             }
         }
 
-        TextComponent textComponent = new TextComponent();
+        Component component = Component.empty()
+                .append(channel.getTagComponent())
+                .append(channel.isShowingTag() ? sender.getChatName() : sender.getChatNameRanked())
+                .append(Component.text(ChatColor.GRAY + ": "))
+                .append(playerMessage.component);
 
-        textComponent.addExtra(channel.getTagComponent());
-        textComponent.addExtra(channel.isShowingTag() ? sender.getChatName() : sender.getChatNameRanked());
-        textComponent.addExtra(net.md_5.bungee.api.ChatColor.GRAY + ": ");
-        textComponent.addExtra(playerMessage.textComponent);
-
-        sender.sendMessage(textComponent);
+        sender.sendMessage(component);
     }
 
     public static void sendMessage(CorePlayer sender, String message) {
@@ -318,16 +299,15 @@ public class Chat {
         if (channel.isGlobal()) {
             Core.getInstance().sendPacket(new PacketSpigotChatPlayer(sender.getUniqueId(), channel.name(), message));
         } else {
-            TextComponent textComponent = new TextComponent();
-
-            textComponent.addExtra(channel.getTagComponent());
-            textComponent.addExtra(channel.isShowingTag() ? sender.getChatName() : sender.getChatNameRanked());
-            textComponent.addExtra(net.md_5.bungee.api.ChatColor.GRAY + ": ");
-            textComponent.addExtra(playerMessage.textComponent);
+            Component component = Component.empty()
+                    .append(channel.getTagComponent())
+                    .append(channel.isShowingTag() ? sender.getChatName() : sender.getChatNameRanked())
+                    .append(Component.text(ChatColor.GRAY + ": "))
+                    .append(playerMessage.component);
 
             for (CorePlayer cp : channel.getPlayerFunc().apply(sender)) {
                 if (channel.isActive(cp)) {
-                    cp.sendMessage(textComponent);
+                    cp.sendMessage(component);
                 }
             }
         }
@@ -335,82 +315,72 @@ public class Chat {
 
     private static final String LINEBREAK = ChatColor.GOLD + "" + ChatColor.BOLD + "- - - - - - - - - - - - - - - - - - - - - - - - - - -";
 
-    public static void sendNpcMessage(CorePlayer receiver, String profile, String name, String message) {
-        ComponentBuilder builder = new ComponentBuilder()
-                .append(LINEBREAK, ComponentBuilder.FormatRetention.NONE)
-                .append("\n" + profile, ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.WHITE).italic(false)
-                .append(" " + name.replaceAll("_", " "), ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.GOLD).bold(true);
+    private static Component createNpcMessage(String profile, String name, String message) {
+        Component component = Component.empty()
+                .append(Component.text(LINEBREAK))
+                .append(Component.text("\n" + profile, NamedTextColor.WHITE, TextDecoration.ITALIC))
+                .append(Component.text(" " + name.replaceAll("_", " "), NamedTextColor.GOLD, TextDecoration.BOLD));
         int i = 0;
         for (String str : message.split("\\\\n")) {
-            builder.append("\n亖 " + str, ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.GREEN).italic(true);
+            component = component.append(Component.text("\n亖 " + str, NamedTextColor.GREEN, TextDecoration.ITALIC));
             i++;
         }
         for (; i <= 4; i++) {
-            builder.append("\n");
+            component = component.appendNewline();
         }
-        builder.append(LINEBREAK, ComponentBuilder.FormatRetention.NONE);
-        receiver.sendMessage(builder.create());
+        component = Component.empty().append(Component.text(LINEBREAK));
+        return component;
+    }
+
+    public static void sendNpcMessage(CorePlayer receiver, String profile, String name, String message) {
+        Component component = createNpcMessage(profile, name, message);
+        receiver.sendMessage(component);
     }
 
     public static void sendNpcMessage(String profile, String name, String message) {
-        ComponentBuilder builder = new ComponentBuilder()
-                .append(LINEBREAK, ComponentBuilder.FormatRetention.NONE)
-                .append("\n" + profile, ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.WHITE).italic(false)
-                .append(" " + name.replaceAll("_", " "), ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.GOLD).bold(true);
-        int i = 0;
-        for (String str : message.split("\\\\n")) {
-            builder.append("\n亖 " + str, ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.GREEN).italic(true);
-            i++;
-        }
-        for (; i <= 4; i++) {
-            builder.append("\n");
-        }
-        builder.append(LINEBREAK, ComponentBuilder.FormatRetention.NONE);
-        Chat.sendMessageLocal(builder.create());
+        Component component = createNpcMessage(profile, name, message);
+        Chat.sendMessageLocal(component);
     }
 
-    private static void sendMessageLocal(BaseComponent... baseComponents) {
+    private static void sendMessageLocal(Component component) {
         for (CorePlayer cp : Core.getInstance().getPlayers().getAllLocal()) {
-            cp.sendMessage(baseComponents);
+            cp.sendMessage(component);
         }
     }
 
     public static void sendNpcMessage(CorePlayer receiver, NpcMessage message) {
-        ComponentBuilder builder = new ComponentBuilder()
-                .append(LINEBREAK, ComponentBuilder.FormatRetention.NONE)
-                .append("\n" + message.getProfile(), ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.WHITE).italic(false)
-                .append(" " + message.getName(), ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.GOLD).bold(true);
-        int i = 0;
-        for (String str : message.getMessages()) {
-            builder.append("\n亖 " + str, ComponentBuilder.FormatRetention.NONE).color(net.md_5.bungee.api.ChatColor.GREEN).italic(true);
-            i++;
-        }
-        for (; i <= 4; i++) {
-            builder.append("\n");
-        }
-        builder.append(LINEBREAK, ComponentBuilder.FormatRetention.NONE);
-        receiver.sendMessage(builder.create());
+        Component component = createNpcMessage(message.getProfile(), message.getName(), String.join("\n", message.getMessages()));
+        receiver.sendMessage(component);
     }
 
     ///npc 倗 Barmaid_Melissa What'll it be honey?\nOur Tree Stump Ales are made from the Valley's own\ntrees. You won't find a better Ale anywhere!
 
-    public static void sendMessage(ChatChannel channel, TextComponent text) {
-        Core.getInstance().sendPacket(new PacketSpigotChatConsole(channel.name(), text.toLegacyText(), false));
+    public static void sendMessage(ChatChannel channel, Component text) {
+        Core.getInstance().sendPacket(new PacketSpigotChatConsole(channel.name(), text.toString(), false));
     }
 
-    public static void sendMessage(ChatChannel channel, TextComponent text, Set<UUID> blacklist) {
-        Core.getInstance().sendPacket(new PacketSpigotChatConsole(channel.name(), text.toLegacyText(), blacklist, false));
+    public static void sendMessage(ChatChannel channel, Component text, Set<UUID> blacklist) {
+        Core.getInstance().sendPacket(new PacketSpigotChatConsole(channel.name(), text.toString(), blacklist, false));
     }
 
-    public static void sendMessageFriends(ChatChannel channel, TextComponent text, Set<UUID> targets) {
-        Core.getInstance().sendPacket(new PacketSpigotChatFriend(channel.name(), text.toLegacyText(), targets));
+    public static void sendMessageFriends(ChatChannel channel, Component text, Set<UUID> targets) {
+        Core.getInstance().sendPacket(new PacketSpigotChatFriend(channel.name(), text.toString(), targets));
     }
 
     public static void sendTitle(ChatChannel channel, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
         for (CorePlayer cp : Core.getInstance().getPlayers().getAllLocal()) {
             if (cp.getOptions().getBoolean("Chat:" + channel.getName())
                     && channel.isAvailable(cp)) {
-                cp.getPlayer().sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+                Component titleComponent = Component.text(title);
+                Component subtitleComponent = Component.text(subtitle);
+                Duration fadeInDuration = Duration.ofMillis(fadeIn);
+                Duration stayDuration = Duration.ofMillis(stay);
+                Duration fadeOutDuration = Duration.ofMillis(fadeOut);
+
+                Title.Times times = Title.Times.times(fadeInDuration, stayDuration, fadeOutDuration);
+                Title titleObj = Title.title(titleComponent, subtitleComponent, times);
+
+                cp.getPlayer().showTitle(titleObj);
             }
         }
     }
@@ -424,69 +394,59 @@ public class Chat {
         cp.sendMessage(Chat.DEFAULT + message);
     }
 
-    public static void sendMessageToPlayer(CorePlayer cp, TextComponent text) {
+    public static void sendMessageToPlayer(CorePlayer cp, Component text) {
         if (cp != null && cp.getPlayer() != null) {
-            TextComponent recolored = new TextComponent(text);
-            recolored.setColor(net.md_5.bungee.api.ChatColor.GRAY);
+            Component recolored = Component.empty().append(text).color(NamedTextColor.GRAY);
             cp.sendMessage(recolored);
         }
     }
 
-    public static void sendMessageToPlayerSuccess(CorePlayer cp, TextComponent text) {
+    public static void sendMessageToPlayerSuccess(CorePlayer cp, Component text) {
         if (cp != null && cp.getPlayer() != null) {
-            TextComponent recolored = new TextComponent(text);
-            recolored.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+            Component recolored = Component.empty().append(text).color(NamedTextColor.GREEN);
             cp.sendMessage(recolored);
         }
     }
 
-    public static void sendMessageToPlayerError(CorePlayer cp, TextComponent text) {
+    public static void sendMessageToPlayerError(CorePlayer cp, Component text) {
         if (cp != null && cp.getPlayer() != null) {
-            TextComponent recolored = new TextComponent(text);
-            recolored.setColor(net.md_5.bungee.api.ChatColor.RED);
+            Component recolored = Component.empty().append(text).color(NamedTextColor.RED);
             cp.sendMessage(recolored);
         }
     }
 
-    public static void sendMessageToPlayerInfo(CorePlayer cp, TextComponent text) {
+    public static void sendMessageToPlayerInfo(CorePlayer cp, Component text) {
         if (cp != null && cp.getPlayer() != null) {
-            TextComponent recolored = new TextComponent(text);
-            recolored.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+            Component recolored = Component.empty().append(text).color(NamedTextColor.YELLOW);
             cp.sendMessage(recolored);
         }
     }
 
     public static void sendRequest(CorePlayer receiver, CorePlayer sender, BiConsumer<CorePlayer, CorePlayer> action, String message) {
-        RequestManager.sendPlayerRequest(Core.getInstance().getChatPrefix(), receiver, sender, action, new TextComponent(message));
+        RequestManager.sendPlayerRequest(Core.getInstance().getChatPrefix(), receiver, sender, action, Component.text(message));
     }
 
     public static void sendRequest(CorePlayer receiver, String requestType, BiConsumer<CorePlayer, String> action, String message) {
-        RequestManager.sendConsoleRequest(Core.getInstance().getChatPrefix(), receiver, requestType, action, new TextComponent(message));
+        RequestManager.sendConsoleRequest(Core.getInstance().getChatPrefix(), receiver, requestType, action, Component.text(message));
     }
 
-    public static void sendRequest(CorePlayer receiver, CorePlayer sender, BiConsumer<CorePlayer, CorePlayer> action, BaseComponent... messages) {
-        RequestManager.sendPlayerRequest(Core.getInstance().getChatPrefix(), receiver, sender, action, messages);
+    public static void sendRequest(CorePlayer receiver, CorePlayer sender, BiConsumer<CorePlayer, CorePlayer> action, Component message) {
+        RequestManager.sendPlayerRequest(Core.getInstance().getChatPrefix(), receiver, sender, action, message);
     }
 
-    public static void sendRequest(CorePlayer receiver, String requestType, BiConsumer<CorePlayer, String> action, BaseComponent... messages) {
-        RequestManager.sendConsoleRequest(Core.getInstance().getChatPrefix(), receiver, requestType, action, messages);
+    public static void sendRequest(CorePlayer receiver, String requestType, BiConsumer<CorePlayer, String> action, Component message) {
+        RequestManager.sendConsoleRequest(Core.getInstance().getChatPrefix(), receiver, requestType, action, message);
     }
 
     public static void sendConfirmationButtons(CorePlayer receiver, String acceptCmd, String declineCmd) {
-        TextComponent text = new TextComponent();
+        Component accept = Component.text(Chat.TAG_BRACE + "[" + Chat.SUCCESS + "Accept" + Chat.TAG_BRACE + "]")
+                .hoverEvent(HoverEvent.showText(Component.text("Click to accept")))
+                .clickEvent(ClickEvent.runCommand(acceptCmd));
+        Component decline = Component.text(Chat.TAG_BRACE + "[" + Chat.ERROR + "Decline" + Chat.TAG_BRACE + "]")
+                .hoverEvent(HoverEvent.showText(Component.text("Click to decline")))
+                .clickEvent(ClickEvent.runCommand(declineCmd));
 
-        TextComponent accept = new TextComponent(Chat.TAG_BRACE + "[" + Chat.SUCCESS + "Accept" + Chat.TAG_BRACE + "]");
-        accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to accept").create()));
-        accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, acceptCmd));
-        TextComponent decline = new TextComponent(Chat.TAG_BRACE + "[" + Chat.ERROR + "Decline" + Chat.TAG_BRACE + "]");
-        decline.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to decline").create()));
-        decline.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, declineCmd));
-
-        text.addExtra(accept);
-        text.addExtra(" ");
-        text.addExtra(decline);
-
-        Core.getInstance().sendMessage(receiver, text);
+        Core.getInstance().sendMessage(receiver, Component.empty().append(accept).appendSpace().append(decline));
     }
 
     /**

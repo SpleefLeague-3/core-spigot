@@ -6,8 +6,9 @@
 
 package com.spleefleague.core.plugin;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.chat.Chat;
@@ -23,24 +24,22 @@ import com.spleefleague.core.music.NoteBlockMusic;
 import com.spleefleague.core.player.BattleState;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.PlayerManager;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.Level;
-
 import com.spleefleague.core.player.scoreboard.PersonalScoreboard;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattleChallenge;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattleForceStart;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattleSpectate;
 import com.spleefleague.coreapi.utils.packet.spigot.queue.PacketSpigotQueueJoin;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * CorePlugin is the base class for all SpleefLeague plugins,
@@ -90,26 +89,23 @@ public abstract class CorePlugin extends JavaPlugin {
     public static void initMongo() {
         org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger) LogManager.getRootLogger();
         coreLogger.addFilter(new CoreLoggerFilter());
-        try {
-            Properties mongoProps = new Properties();
-            String mongoPath = System.getProperty("user.dir") + "/mongo.cfg";
-            FileInputStream file = new FileInputStream(mongoPath);
 
-            mongoProps.load(file);
-            file.close();
+        Properties properties = new Properties();
 
-            String mongoPrefix = mongoProps.getProperty("prefix", "mongodb://");
-            String credentials = mongoProps.getProperty("credentials", "");
-            if (!credentials.isEmpty()) credentials = credentials.concat("@");
-            String host = mongoProps.getProperty("host", "localhost:27017") + "/";
-            String defaultauthdb = mongoProps.getProperty("defaultauthdb", "admin") + "?";
-            String options = mongoProps.getProperty("options", "");
-            MongoClientURI uri = new MongoClientURI(mongoPrefix + credentials + host + defaultauthdb + options);
-            mongoClient = new MongoClient(uri);
+        String mongoPath = System.getProperty("user.dir") + "/mongo.cfg";
+
+        try (FileInputStream inputStream = new FileInputStream(mongoPath)) {
+            properties.load(inputStream);
         } catch (IOException e) {
-            mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017/"));
-            Core.getInstance().getLogger().log(Level.WARNING, "mongo.cfg not found, using localhost");
+            e.printStackTrace();
         }
+
+        String connectionString = properties.getProperty("mongodb.uri", "mongodb://localhost:27017");
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new com.mongodb.ConnectionString(connectionString))
+                .build();
+
+        mongoClient = MongoClients.create(settings);
     }
 
     /**
@@ -347,7 +343,7 @@ public abstract class CorePlugin extends JavaPlugin {
         }
     }
 
-    public abstract TextComponent getChatPrefix();
+    public abstract Component getChatPrefix();
 
     public void challengePlayer(CorePlayer sender, CorePlayer target, BattleMode battleMode, String arenaName) {
         Arena arena = Arenas.get(arenaName, battleMode);
@@ -374,21 +370,18 @@ public abstract class CorePlugin extends JavaPlugin {
      * @param msg Message
      */
     public final void sendMessage(String msg) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(Chat.colorize(msg));
+        Component component = getChatPrefix().append(Component.text(Chat.colorize(msg)));
+        Chat.sendMessage(ChatChannel.GLOBAL, component);
+    }
+
+    public final void sendMessage(Component text) {
+        Component textComponent = getChatPrefix().append(text);
         Chat.sendMessage(ChatChannel.GLOBAL, textComponent);
     }
 
-    public final void sendMessage(TextComponent text) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(text);
-        Chat.sendMessage(ChatChannel.GLOBAL, textComponent);
-    }
-
-    public final void sendMessageFriends(TextComponent text, ChatChannel channel, Set<UUID> players) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(text);
-        Chat.sendMessageFriends(channel, text, players);
+    public final void sendMessageFriends(Component text, ChatChannel channel, Set<UUID> players) {
+        Component component = getChatPrefix().append(text);
+        Chat.sendMessageFriends(channel, component, players);
     }
 
     /**
@@ -397,9 +390,8 @@ public abstract class CorePlugin extends JavaPlugin {
      * @param msg Message
      */
     public final void sendMessageBlacklisted(String msg, Set<UUID> blacklist) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(Chat.colorize(msg));
-        Chat.sendMessage(ChatChannel.GLOBAL, textComponent, blacklist);
+        Component component = getChatPrefix().append(Component.text((Chat.colorize(msg))));
+        Chat.sendMessage(ChatChannel.GLOBAL, component, blacklist);
     }
 
     /**
@@ -407,10 +399,9 @@ public abstract class CorePlugin extends JavaPlugin {
      *
      * @param msg Message
      */
-    public final void sendMessageBlacklisted(TextComponent msg, Set<UUID> blacklist) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(msg);
-        Chat.sendMessage(ChatChannel.GLOBAL, textComponent, blacklist);
+    public final void sendMessageBlacklisted(Component msg, Set<UUID> blacklist) {
+        Component component = getChatPrefix().append(msg);
+        Chat.sendMessage(ChatChannel.GLOBAL, component, blacklist);
     }
 
     /**
@@ -420,14 +411,12 @@ public abstract class CorePlugin extends JavaPlugin {
      * @param msg Message
      */
     public final void sendMessage(CorePlayer cp, String msg) {
-        TextComponent message = getChatPrefix();
-        message.addExtra(Chat.colorize(msg));
+        Component message = getChatPrefix().append(Component.text(Chat.colorize(msg)));
         Chat.sendMessageToPlayer(cp, message);
     }
 
-    public final void sendMessage(CorePlayer cp, TextComponent text) {
-        TextComponent message = new TextComponent(getChatPrefix());
-        message.addExtra(text);
+    public final void sendMessage(CorePlayer cp, Component text) {
+        Component message = getChatPrefix().append(text);
         Chat.sendMessageToPlayer(cp, message);
     }
 
@@ -438,9 +427,8 @@ public abstract class CorePlugin extends JavaPlugin {
      * @param msg Message
      */
     public final void sendMessage(CommandSender cs, String msg) {
-        TextComponent message = new TextComponent(getChatPrefix());
-        message.addExtra(msg);
-        cs.sendMessage(message.toPlainText());
+        Component message = getChatPrefix().append(Component.text(msg));
+        cs.sendMessage(message);
     }
 
     /**
@@ -451,9 +439,8 @@ public abstract class CorePlugin extends JavaPlugin {
      * @param msg Message
      */
     public final void sendMessage(ChatChannel cc, String msg) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(Chat.colorize(msg));
-        Chat.sendMessage(cc, textComponent);
+        Component component = getChatPrefix().append(Component.text(Chat.colorize(msg)));
+        Chat.sendMessage(cc, component);
     }
 
     /**
@@ -465,9 +452,8 @@ public abstract class CorePlugin extends JavaPlugin {
      * @param blacklist Blacklist of Players
      */
     public final void sendMessageBlacklisted(ChatChannel cc, String msg, Set<UUID> blacklist) {
-        TextComponent textComponent = getChatPrefix();
-        textComponent.addExtra(Chat.colorize(msg));
-        Chat.sendMessage(cc, textComponent, blacklist);
+        Component component = getChatPrefix().append(Component.text(Chat.colorize(msg)));
+        Chat.sendMessage(cc, component, blacklist);
     }
 
 }

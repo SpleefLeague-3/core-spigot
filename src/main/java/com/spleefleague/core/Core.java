@@ -1,13 +1,9 @@
 package com.spleefleague.core;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.google.common.collect.Lists;
 import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.chat.ticket.Tickets;
@@ -30,8 +26,8 @@ import com.spleefleague.core.menu.overlays.SLMainOverlay;
 import com.spleefleague.core.music.NoteBlockMusic;
 import com.spleefleague.core.packet.PacketManager;
 import com.spleefleague.core.player.CoreOfflinePlayer;
-import com.spleefleague.core.player.PlayerManager;
 import com.spleefleague.core.player.CorePlayer;
+import com.spleefleague.core.player.PlayerManager;
 import com.spleefleague.core.player.collectible.Collectible;
 import com.spleefleague.core.player.party.CorePartyManager;
 import com.spleefleague.core.player.rank.CoreRankManager;
@@ -49,8 +45,11 @@ import com.spleefleague.coreapi.database.variable.DBPlayer;
 import com.spleefleague.coreapi.utils.packet.bungee.refresh.PacketBungeeRefreshServerList;
 import com.spleefleague.coreapi.utils.packet.spigot.PacketSpigot;
 import com.spleefleague.coreapi.utils.packet.spigot.server.PacketSpigotServerHub;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -64,8 +63,6 @@ import org.reflections.util.FilterBuilder;
 import javax.annotation.Nonnull;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * SpleefLeague's Core Plugin
@@ -379,6 +376,7 @@ public class Core extends CorePlugin {
      * removes players from Tab List when they become vanished
      */
     public void initTabList() {
+        /*
         addProtocolPacketAdapter(new PacketAdapter(Core.getInstance(), PacketType.Play.Server.PLAYER_INFO) {
             @Override
             public void onPacketSending(PacketEvent pe) {
@@ -401,6 +399,7 @@ public class Core extends CorePlugin {
                 }
             }
         });
+         */
     }
 
     public static void addProtocolPacketAdapter(PacketAdapter packetAdapter) {
@@ -431,11 +430,7 @@ public class Core extends CorePlugin {
      */
     public static void sendPacket(@Nonnull Player p, PacketContainer packet) {
         if (packet == null) return;
-        try {
-            protocolManager.sendServerPacket(p, packet);
-        } catch (InvocationTargetException ex) {
-            Logger.getLogger(Core.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        protocolManager.sendServerPacket(p, packet);
     }
 
     /**
@@ -447,42 +442,26 @@ public class Core extends CorePlugin {
     public static void sendPacket(CorePlayer cp, PacketContainer packet) {
         if (packet == null) return;
         Bukkit.getScheduler().runTask(Core.getInstance(), () -> {
-            try {
-                if (cp.getPlayer() != null) protocolManager.sendServerPacket(cp.getPlayer(), packet);
-            } catch (InvocationTargetException e) {
-                CoreLogger.logError(e);
-            }
+            if (cp.getPlayer() != null) protocolManager.sendServerPacket(cp.getPlayer(), packet);
         });
     }
 
     public static void sendPacket(CorePlayer cp, PacketContainer packet, long delay) {
         if (packet == null) return;
         Bukkit.getScheduler().runTaskLater(Core.getInstance(), () -> {
-            try {
-                if (cp.getPlayer() != null) protocolManager.sendServerPacket(cp.getPlayer(), packet);
-            } catch (InvocationTargetException e) {
-                CoreLogger.logError(e);
-            }
+            if (cp.getPlayer() != null) protocolManager.sendServerPacket(cp.getPlayer(), packet);
         }, delay);
     }
 
     public static void sendPacketSilently(@Nonnull Player p, PacketContainer packet) {
         if (packet == null) return;
-        try {
-            protocolManager.sendServerPacket(p, packet, null, false);
-        } catch (InvocationTargetException e) {
-            CoreLogger.logError(e);
-        }
+        protocolManager.sendServerPacket(p, packet, null, false);
     }
 
     public static void sendPacketSilently(@Nonnull Player p, PacketContainer packet, long delay) {
         if (packet == null) return;
         Bukkit.getScheduler().runTaskLater(Core.getInstance(), () -> {
-            try {
-                protocolManager.sendServerPacket(p, packet, null, false);
-            } catch (InvocationTargetException e) {
-                CoreLogger.logError(e);
-            }
+            protocolManager.sendServerPacket(p, packet, null, false);
         }, delay);
     }
 
@@ -590,8 +569,8 @@ public class Core extends CorePlugin {
      * @return Chat Prefix
      */
     @Override
-    public TextComponent getChatPrefix() {
-        return new TextComponent(ChatColor.WHITE + "仳 ");
+    public Component getChatPrefix() {
+        return Component.text("仳 ", NamedTextColor.WHITE);
     }
 
     /**

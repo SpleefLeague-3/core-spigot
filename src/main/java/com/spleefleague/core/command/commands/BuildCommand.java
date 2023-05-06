@@ -11,6 +11,7 @@ import com.spleefleague.core.world.build.BuildStructure;
 import com.spleefleague.core.world.build.BuildStructures;
 import com.spleefleague.core.world.build.BuildWorld;
 import com.spleefleague.core.world.build.BuildWorldPlayer;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 
@@ -71,7 +72,7 @@ public class BuildCommand extends CoreCommand {
                             success(r, "Joined " + s.getDisplayNamePossessive() + " world");
                         }
                     },
-                    sender.getChatName(), new TextComponent(" invited you to join their build world"));
+                    Component.empty().append(sender.getChatName()).append(Component.text(" invited you to join their build world")));
             success(sender, "Invitation sent");
         } else {
             error(sender, "You aren't in a build world!");
@@ -97,21 +98,11 @@ public class BuildCommand extends CoreCommand {
                           @LiteralArg("edit") String l,
                           @OptionArg(listName = "structures") String structureName) {
         switch (BuildStructures.edit(sender, structureName)) {
-            case 0:
-                success(sender, "Editing structure " + structureName);
-                break;
-            case 1:
-                error(sender, "Structure does not exist!");
-                break;
-            case 2:
-                error(sender, "Structure is under construction!");
-                break;
-            case 3:
-                error(sender, "You're already in a fake world!");
-                break;
-            case 4:
-                error(sender, "Structure would overlap with an existing block!");
-                break;
+            case 0 -> success(sender, "Editing structure " + structureName);
+            case 1 -> error(sender, "Structure does not exist!");
+            case 2 -> error(sender, "Structure is under construction!");
+            case 3 -> error(sender, "You're already in a fake world!");
+            case 4 -> error(sender, "Structure would overlap with an existing block!");
         }
     }
 
@@ -235,7 +226,7 @@ public class BuildCommand extends CoreCommand {
                         success(sender, "Structure has been worldified");
                         //error(sender, CoreError.SETUP);
                     },
-                    new TextComponent("Are you sure you want to send the selected area to the real world?  This will overwrite current blocks, no undoing!"));
+                    Component.text("Are you sure you want to send the selected area to the real world?  This will overwrite current blocks, no undoing!"));
         } else {
             error(sender, "You aren't in a build world!");
         }
@@ -252,7 +243,7 @@ public class BuildCommand extends CoreCommand {
                         sender.getBuildWorld().buildify(bwp.getPosBox());
                         success(sender, "Structure has been buildified");
                     },
-                    new TextComponent("Are you sure you want to send the selected area to the build world?  This will overwrite current blocks, no undoing!"));
+                    Component.text("Are you sure you want to send the selected area to the build world?  This will overwrite current blocks, no undoing!"));
         } else {
             error(sender, "You aren't in a build world!");
         }

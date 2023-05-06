@@ -2,12 +2,7 @@ package com.spleefleague.core.util;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.BlockPosition;
-import com.comphenix.protocol.wrappers.ChunkCoordIntPair;
-import com.comphenix.protocol.wrappers.MultiBlockChangeInfo;
-import com.comphenix.protocol.wrappers.WrappedBlockData;
-import com.mojang.authlib.GameProfile;
-import com.spleefleague.core.Core;
+import com.comphenix.protocol.wrappers.*;
 import com.spleefleague.core.logger.CoreLogger;
 import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.util.packet.BlockPalette;
@@ -17,20 +12,16 @@ import com.spleefleague.core.util.packet.ChunkSection;
 import com.spleefleague.core.util.variable.MultiBlockChange;
 import com.spleefleague.core.world.ChunkCoord;
 import com.spleefleague.core.world.FakeBlock;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket;
-import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,43 +30,15 @@ import java.util.stream.Collectors;
  */
 public class PacketUtils {
 
-    private static ServerPlayer mapToServerPlayer(UUID uuid, String name) {
-        return new ServerPlayer(
-                ((CraftServer) Bukkit.getServer()).getServer(),
-                ((CraftWorld) Core.OVERWORLD).getHandle(),
-                new GameProfile(
-                        uuid,
-                        name
-                ),
-                null
-        );
-    }
+    public static PacketContainer createBlockChangePacket(BlockPosition blockPosition, FakeBlock fakeBlock) {
+        PacketContainer packet = new PacketContainer(PacketType.Play.Server.BLOCK_CHANGE);
 
-    public static PacketContainer createAddPlayerPacket(List<CoreOfflinePlayer> corePlayers) {
-        ClientboundPlayerInfoPacket playerInfoPacket = new ClientboundPlayerInfoPacket(
-                ClientboundPlayerInfoPacket.Action.ADD_PLAYER,
-                corePlayers.stream()
-                        .map(cp -> mapToServerPlayer(cp.getUniqueId(), cp.getName()))
-                        .collect(Collectors.toList()));
-        return new PacketContainer(PacketType.Play.Server.PLAYER_INFO, playerInfoPacket);
-    }
+        packet.getBlockPositionModifier().write(0, blockPosition);
 
-    public static PacketContainer createRemovePlayerPacket(List<UUID> uuids) {
-        ClientboundPlayerInfoPacket playerInfoPacket = new ClientboundPlayerInfoPacket(
-                ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER,
-                uuids.stream()
-                        .map(uuid -> mapToServerPlayer(uuid, null))
-                        .collect(Collectors.toList()));
-        return new PacketContainer(PacketType.Play.Server.PLAYER_INFO, playerInfoPacket);
-    }
+        WrappedBlockData blockData = WrappedBlockData.createData(fakeBlock.blockData().getMaterial());
+        packet.getBlockData().write(0, blockData);
 
-    public static PacketContainer createBlockChangePacket(BlockPosition blockPos, FakeBlock fakeBlock) {
-        PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.BLOCK_CHANGE);
-
-        packetContainer.getBlockPositionModifier().write(0, blockPos);
-        packetContainer.getBlockData().write(0, WrappedBlockData.createData(fakeBlock.blockData().getMaterial()));
-
-        return packetContainer;
+        return packet;
     }
 
     public static PacketContainer createMultiBlockChangePacket(ChunkCoord chunkCoord, List<MultiBlockChange> fakeChunkBlocks) {

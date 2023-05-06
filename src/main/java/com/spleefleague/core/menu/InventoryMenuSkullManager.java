@@ -2,20 +2,20 @@ package com.spleefleague.core.menu;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import com.mongodb.client.MongoCollection;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.logger.CoreLogger;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -94,38 +94,27 @@ public class InventoryMenuSkullManager {
         });
     }
 
-    private static ItemStack getPlayerSkull(UUID uuid, Texture texture) {
-        net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(new ItemStack(Material.PLAYER_HEAD));
+    private static ItemStack getPlayerSkull(Texture texture) {
+        ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
 
-        CompoundTag compound = nmsStack.getTag();
-        if (compound == null) {
-            nmsStack.setTag(new CompoundTag());
-            compound = nmsStack.getTag();
+        GameProfile gameProfile = new GameProfile(UUID.randomUUID(), null);
+        gameProfile.getProperties().put("textures", new Property("textures", texture.value, texture.signature));
+
+        try {
+            Field profileField = skullMeta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(skullMeta, gameProfile);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            Bukkit.getLogger().warning("Failed to set player head texture: " + e.getMessage());
         }
-        if (compound == null) {
-            return CraftItemStack.asBukkitCopy(nmsStack);
-        }
 
-        CompoundTag skullOwner = new CompoundTag();
-        skullOwner.putString("Id", uuid.toString());
-
-        CompoundTag properties = new CompoundTag();
-        ListTag textures = new ListTag();
-        CompoundTag value = new CompoundTag();
-        value.putString("Value", texture.value);
-        value.putString("Signature", texture.signature);
-        textures.add(value);
-        properties.put("textures", textures);
-        skullOwner.put("Properties", properties);
-
-        compound.put("SkullOwner", skullOwner);
-        nmsStack.setTag(compound);
-
-        return CraftItemStack.asBukkitCopy(nmsStack);
+        playerHead.setItemMeta(skullMeta);
+        return playerHead;
     }
 
     public static ItemStack getPlayerSkullForced(UUID uuid) {
-        return getPlayerSkull(uuid, getTexture(uuid));
+        return getPlayerSkull(getTexture(uuid));
     }
 
     public static ItemStack getPlayerSkull(UUID uuid) {

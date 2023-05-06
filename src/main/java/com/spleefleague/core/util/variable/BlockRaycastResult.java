@@ -10,12 +10,12 @@ import org.bukkit.util.Vector;
  */
 public class BlockRaycastResult extends RaycastResult {
 
-    private BlockPosition blockPos;
-    private BlockPosition relative;
-    private Integer axis;
-    private BlockFace face;
+    private final BlockPosition blockPos;
+    private final BlockPosition relative;
+    private final Integer axis;
+    private final BlockFace face;
 
-    BlockRaycastResult(BlockPosition blockPos, Double distance, Vector intersection, Integer axis, BlockFace face) {
+    public BlockRaycastResult(BlockPosition blockPos, Double distance, Vector intersection, Integer axis, BlockFace face) {
         super(distance, intersection);
         this.blockPos = blockPos;
         this.axis = axis;

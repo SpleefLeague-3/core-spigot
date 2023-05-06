@@ -14,7 +14,7 @@ import com.spleefleague.core.game.battle.Battle;
 import com.spleefleague.core.logger.CoreLogger;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.party.CoreParty;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +52,8 @@ public class BattleManagerTeam extends BattleManager {
             for (CorePlayer cp2 : party.getPlayerSet()) {
                 playersFull.add(cp2);
                 if (!cp2.canJoinBattle()) {
-                    TextComponent text = new TextComponent(cp2.getChatName());
-                    text.addExtra(" is already in a battle!");
+
+                    Component text = cp2.getChatName().append(Component.text(" is already in a battle!"));
                     party.sendMessage(text);
                     Core.getInstance().unqueuePlayerGlobally(cp);
                     Core.getInstance().unqueuePlayerGlobally(cp2);

@@ -7,17 +7,15 @@
 package com.spleefleague.core.menu.hotbars.main;
 
 import com.spleefleague.core.Core;
-import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.menu.InventoryMenuAPI;
 import com.spleefleague.core.menu.InventoryMenuItem;
-import com.spleefleague.core.menu.hotbars.main.socialmedia.StaffMenu;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.settings.Settings;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.ChatColor;
+import com.spleefleague.coreapi.chat.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 
 
@@ -63,11 +61,12 @@ public class SocialMediaMenu {
                 .setAction(SocialMediaMenu::sendTwitter);
     }
 
-    private static TextComponent toUrl(String url) {
-        TextComponent component = new TextComponent(ChatColor.BLUE + url);
-        component.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-        component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder().append(ChatColor.WHITE + "Click to open").create()));
-        return component;
+    private static Component toUrl(String url) {
+        return Component.empty()
+                .color(NamedTextColor.BLUE)
+                .append(Component.text(url))
+                .clickEvent(ClickEvent.openUrl(url))
+                .hoverEvent(HoverEvent.showText(Component.text(ChatColor.WHITE + "Click to open")));
     }
 
     private static void sendWebsite(CorePlayer corePlayer) {

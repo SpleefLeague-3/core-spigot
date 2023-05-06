@@ -11,7 +11,6 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import java.util.*;
 
 import com.spleefleague.coreapi.database.variable.DBVariable;
-import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -36,12 +35,6 @@ public class Point extends DBVariable<List<Double>> {
         this.x = x;
         this.y = y;
         this.z = z;
-    }
-
-    public Point(Vec3 vec) {
-        this.x = vec.x;
-        this.y = vec.y;
-        this.z = vec.z;
     }
 
     public Point(Location loc) {

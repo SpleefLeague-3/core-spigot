@@ -7,6 +7,7 @@
 package com.spleefleague.core.request;
 
 import com.spleefleague.core.player.CorePlayer;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.chat.BaseComponent;
 
 /**
@@ -16,9 +17,9 @@ public abstract class Request {
 
     protected long timeout;
     protected CorePlayer receiver;
-    protected BaseComponent tag;
+    protected Component tag;
 
-    public Request(CorePlayer receiver, BaseComponent tag) {
+    public Request(CorePlayer receiver, Component tag) {
         this.timeout = System.currentTimeMillis() + 120 * 1000;
         this.receiver = receiver;
         this.tag = tag;

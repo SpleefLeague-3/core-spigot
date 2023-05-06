@@ -6,7 +6,6 @@
 
 package com.spleefleague.core.command.commands;
 
-import com.spleefleague.core.Core;
 import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.command.annotation.*;
 import com.spleefleague.core.command.CoreCommand;
@@ -16,13 +15,6 @@ import com.spleefleague.core.player.rank.CoreRank;
 
 import com.spleefleague.core.util.CoreUtils;
 import com.spleefleague.core.world.FakeBlock;
-import com.spleefleague.core.world.FakeWorld;
-import com.spleefleague.core.world.global.GlobalWorld;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -38,8 +30,8 @@ public class DebugCommand extends CoreCommand {
 
     public DebugCommand() {
         super("sldebug", CoreRank.DEVELOPER);
-        setUsage("/sldebug " + ChatColor.MAGIC + "[hope u no read]");
-        setDescription("debu" + ChatColor.MAGIC + "g more read?");
+        //setUsage("/sldebug " + ChatColor.MAGIC + "[hope u no read]");
+        //setDescription("debu" + ChatColor.MAGIC + "g more read?");
         setOptions("sounds", pi -> CoreUtils.enumToStrSet(Sound.class, true));
     }
 
@@ -126,6 +118,7 @@ public class DebugCommand extends CoreCommand {
                            @LiteralArg("sound") String l,
                            @HelperArg("<pitch>") Double pitch,
                            @Nullable @OptionArg(listName = "sounds", force = false) String startsWith) {
+        /*
         TextComponent message = new TextComponent("");
         TextComponent soundStr;
 
@@ -152,6 +145,7 @@ public class DebugCommand extends CoreCommand {
         if (i > 0) {
             sender.sendMessage(message);
         }
+         */
     }
 
     @CommandAnnotation(hidden = true)

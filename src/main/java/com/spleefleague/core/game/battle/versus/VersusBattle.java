@@ -19,11 +19,12 @@ import com.spleefleague.core.plugin.CorePlugin;
 import com.spleefleague.core.util.CoreUtils;
 import com.spleefleague.core.util.variable.Position;
 import com.spleefleague.core.world.FakeBlock;
-import com.spleefleague.core.world.FakeUtils;
+import com.spleefleague.core.world.FakeUtil;
 import com.spleefleague.core.world.build.BuildStructure;
 import com.spleefleague.core.world.build.BuildStructures;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattleEnd;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.ChatColor;
 
 import java.util.List;
@@ -80,15 +81,15 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
      */
     @Override
     protected void sendStartMessage() {
-        TextComponent text = new TextComponent();
-        text.setColor(ChatColor.GRAY.asBungee());
-        text.addExtra("Starting ");
-        text.addExtra(getMode().getDisplayName());
-        text.addExtra(" match on ");
-        text.addExtra(Chat.GAMEMAP + arena.getName());
-        text.addExtra(" between ");
-        text.addExtra(CoreUtils.mergePlayerNames(battlers.keySet()));
-        sendNotification(text);
+        Component component = Component.empty()
+                .color(NamedTextColor.GRAY)
+                .append(Component.text("Starting "))
+                .append(Component.text(getMode().getDisplayName()))
+                .append(Component.text(" match on "))
+                .append(Component.text(Chat.GAMEMAP + arena.getName()))
+                .append(Component.text(" between "))
+                .append(Component.text(CoreUtils.mergePlayerNames(battlers.keySet())));
+        sendNotification(component);
     }
 
     @Override
@@ -155,7 +156,7 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
                 BuildStructure score0 = BuildStructures.get("score" + (score > 9 ? "+" : score));
                 if (score0 != null) {
                     Map<BlockPosition, FakeBlock> blocks = score0.getFakeBlocks();
-                    blocks = FakeUtils.translateBlocks(FakeUtils.rotateBlocks(blocks, (int) scoreboard.getYaw()), scoreboard.toBlockPosition());
+                    blocks = FakeUtil.translateBlocks(FakeUtil.rotateBlocks(blocks, (int) scoreboard.getYaw()), scoreboard.toBlockPosition());
                     gameWorld.setBlocksForced(blocks);
                 }
             }
@@ -164,7 +165,7 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
                 BuildStructure score1 = BuildStructures.get("score" + (score > 9 ? "+" : score));
                 if (score1 != null) {
                     Map<BlockPosition, FakeBlock> blocks = score1.getFakeBlocks();
-                    blocks = FakeUtils.translateBlocks(FakeUtils.rotateBlocks(FakeUtils.translateBlocks(blocks, new BlockPosition(7, 0, 0)), (int) scoreboard.getYaw()), scoreboard.toBlockPosition());
+                    blocks = FakeUtil.translateBlocks(FakeUtil.rotateBlocks(FakeUtil.translateBlocks(blocks, new BlockPosition(7, 0, 0)), (int) scoreboard.getYaw()), scoreboard.toBlockPosition());
                     gameWorld.setBlocksForced(blocks);
                 }
             }
@@ -172,9 +173,8 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
     }
 
     protected void onScorePoint(BP winner) {
-        TextComponent text = winner.getCorePlayer().getChatName();
-        text.addExtra(" has scored a point!");
-        chatGroup.sendMessage(text);
+        Component component = winner.getCorePlayer().getChatName().append(Component.text(" has scored a point!"));
+        chatGroup.sendMessage(component);
         updatePhysicalScoreboard();
     }
 
@@ -207,21 +207,21 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
 
     protected int applyEloChange(BP winner, BP loser) {
         if (forced) {
-            TextComponent text = new TextComponent();
-            text.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-            text.addExtra("You have defeated ");
-            text.addExtra(loser.getCorePlayer().getChatName());
-            text.addExtra(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-            text.addExtra(" " + winner.getRoundWins() + "-" + loser.getRoundWins());
-            winner.getCorePlayer().sendMessage(text);
+            Component component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text("You have defeated "))
+                    .append(loser.getCorePlayer().getChatName())
+                    .append(Component.text(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason())))
+                    .append(Component.text(" " + winner.getRoundWins() + "-" + loser.getRoundWins()));
+            winner.getCorePlayer().sendMessage(component);
 
-            text = new TextComponent();
-            text.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-            text.addExtra("You have been defeated by ");
-            text.addExtra(winner.getCorePlayer().getChatName());
-            text.addExtra(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-            text.addExtra(" " + loser.getRoundWins() + "-" + winner.getRoundWins());
-            loser.getCorePlayer().sendMessage(text);
+            component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text("You have been defeated by "))
+                    .append(winner.getCorePlayer().getChatName())
+                    .append(Component.text(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason())))
+                    .append(Component.text(" " + loser.getRoundWins() + "-" + winner.getRoundWins()));
+            loser.getCorePlayer().sendMessage(component);
             return 0;
         }
         int avgRating = 0;
@@ -242,29 +242,21 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
             int initialElo = bp.getCorePlayer().getRatings().getElo(getMode().getName(), getMode().getSeason());
             int toChange = bp.equals(winner) ? eloChange : -eloChange;
             bp.getCorePlayer().getRatings().addRating(getMode().getName(), getMode().getSeason(), toChange);
-            TextComponent component = new TextComponent();
-            component.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-            TextComponent text = new TextComponent();
-            text.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-            text.addExtra("You have " + (toChange >= 0 ? "defeated " : "been defeated by "));
-            if (bp.equals(winner)) {
-                text.addExtra(loser.getCorePlayer().getChatName());
-                component.addExtra(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-            }
-            else {
-                text.addExtra(winner.getCorePlayer().getChatName());
-                component.addExtra(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-            }
-            if (bp.equals(winner)) text.addExtra(" " + winner.getRoundWins() + "-" + loser.getRoundWins());
-            else text.addExtra(" " + loser.getRoundWins() + "-" + winner.getRoundWins());
-            text.addExtra(" and " + (toChange >= 0 ? "gained " : "lost "));
-            text.addExtra(ChatColor.GREEN + "" + eloChange);
-            text.addExtra(" Rating Points (");
-            text.addExtra(ChatColor.RED + "" + initialElo);
-            text.addExtra("->");
-            text.addExtra(ChatColor.GREEN + "" + (initialElo + toChange));
-            text.addExtra(")");
-            bp.getCorePlayer().sendMessage(text);
+
+            Component component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text("You have " + (toChange >= 0 ? "defeated " : "been defeated by ")))
+                    .append(bp.equals(winner) ? loser.getCorePlayer().getChatName() : winner.getCorePlayer().getChatName())
+                    .append(Component.text(bp.equals(winner) ? (" " + winner.getRoundWins() + "-" + loser.getRoundWins()) : (" " + loser.getRoundWins() + "-" + winner.getRoundWins())))
+                    .append(Component.text(" and " + (toChange >= 0 ? "gained " : "lost ")))
+                    .append(Component.text(eloChange).color(NamedTextColor.GREEN))
+                    .append(Component.text(" Rating Points ("))
+                    .append(Component.text(initialElo).color(NamedTextColor.RED))
+                    .append(Component.text("->"))
+                    .append(Component.text(initialElo + toChange).color(NamedTextColor.GREEN))
+                    .append(Component.text(")"));
+
+            bp.getCorePlayer().sendMessage(component);
         }
 
         applyRewards(winner, true);
@@ -280,12 +272,10 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
     @Override
     public void endBattle(BP winner) {
         if (winner == null) {
-            TextComponent text = new TextComponent();
-            text.setColor(ChatColor.GRAY.asBungee());
-            text.addExtra("Battle between ");
-            text.addExtra(CoreUtils.mergePlayerNames(battlers.keySet()));
-            text.addExtra(" was peacefully concluded.");
-            sendNotification(text);
+            Component component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text("Battle between " + CoreUtils.mergePlayerNames(battlers.keySet()) + " was peacefully concluded."));
+            sendNotification(component);
         } else {
             BP loser = null;
             for (CorePlayer cp : battlers.keySet()) {
@@ -296,19 +286,19 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
             }
             if (loser == null) {
                 loser = winner;
-                TextComponent text = new TextComponent();
-                text.setColor(ChatColor.GRAY.asBungee());
-                text.addExtra(winner.getCorePlayer().getChatName());
-                text.addExtra(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-                text.addExtra(" has " + BattleUtils.randomDefeatSynonym() + " ");
-                text.addExtra(loser.getCorePlayer().getChatName());
-                text.addExtra(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-                text.addExtra("(");
-                text.addExtra(Chat.SCORE + winner.getRoundWins());
-                text.addExtra("-");
-                text.addExtra(Chat.SCORE + loser.getRoundWins());
-                text.addExtra(")");
-                sendNotification(text);
+                Component component = Component.empty()
+                        .color(NamedTextColor.GRAY)
+                        .append(winner.getCorePlayer().getChatName())
+                        .append(Component.text(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason())))
+                        .append(Component.text(" has " + BattleUtils.randomDefeatSynonym() + " "))
+                        .append(loser.getCorePlayer().getChatName())
+                        .append(Component.text(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason())))
+                        .append(Component.text(" ("))
+                        .append(Component.text(Chat.SCORE + winner.getRoundWins()))
+                        .append(Component.text("-"))
+                        .append(Component.text(Chat.SCORE + loser.getRoundWins()))
+                        .append(Component.text(")"));
+                sendNotification(component);
                 gameHistory.setEndReason(GameHistory.EndReason.CANCEL);
             } else {
                 for (BattlePlayer bp : battlers.values()) {
@@ -321,19 +311,18 @@ public abstract class VersusBattle<BP extends BattlePlayer> extends Battle<BP> {
                 }
                 applyEloChange(winner, loser);
 
-                TextComponent component;
-                component = new TextComponent();
-                component.setColor(ChatColor.GRAY.asBungee());
-                component.addExtra(winner.getCorePlayer().getChatName());
-                component.addExtra(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-                component.addExtra(" has " + BattleUtils.randomDefeatSynonym() + " ");
-                component.addExtra(loser.getCorePlayer().getChatName());
-                component.addExtra(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason()));
-                component.addExtra(" (");
-                component.addExtra(Chat.SCORE + winner.getRoundWins());
-                component.addExtra("-");
-                component.addExtra(Chat.SCORE + loser.getRoundWins());
-                component.addExtra(")");
+                Component component = Component.empty()
+                        .color(NamedTextColor.GRAY)
+                        .append(winner.getCorePlayer().getChatName())
+                        .append(Component.text(winner.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason())))
+                        .append(Component.text(" has " + BattleUtils.randomDefeatSynonym() + " "))
+                        .append(loser.getCorePlayer().getChatName())
+                        .append(Component.text(loser.getCorePlayer().getRatings().getDisplayElo(getMode().getName(), getMode().getSeason())))
+                        .append(Component.text(" ("))
+                        .append(Component.text(Chat.SCORE + winner.getRoundWins()))
+                        .append(Component.text("-"))
+                        .append(Component.text(Chat.SCORE + loser.getRoundWins()))
+                        .append(Component.text(")"));
                 sendNotification(component);
                 gameHistory.setPlayerStats(winner.getPlayer().getUniqueId(), 0, winner.getRoundWins());
                 gameHistory.setPlayerStats(loser.getPlayer().getUniqueId(), 1, loser.getRoundWins());

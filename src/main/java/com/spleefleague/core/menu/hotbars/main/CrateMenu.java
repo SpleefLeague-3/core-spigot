@@ -4,19 +4,13 @@ import com.spleefleague.core.Core;
 import com.spleefleague.core.crate.Crate;
 import com.spleefleague.core.crate.CrateLoot;
 import com.spleefleague.core.menu.InventoryMenuAPI;
-import com.spleefleague.core.menu.InventoryMenuContainer;
 import com.spleefleague.core.menu.InventoryMenuItem;
 import com.spleefleague.core.menu.InventoryMenuUtils;
-import com.spleefleague.core.player.collectible.Collectible;
-import com.spleefleague.core.player.collectible.CollectibleSkin;
-import com.spleefleague.core.player.purse.CoreCurrency;
-import com.spleefleague.core.world.global.GlobalWorld;
+import com.spleefleague.core.world.projectile.global.GlobalWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.Map;
 
 /**
  * @author NickM13

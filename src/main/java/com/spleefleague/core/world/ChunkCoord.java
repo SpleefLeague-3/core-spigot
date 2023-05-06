@@ -5,6 +5,7 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.ChunkCoordIntPair;
 import com.google.common.collect.Lists;
 import com.spleefleague.coreapi.database.variable.DBVariable;
+import org.bukkit.Location;
 
 import java.util.List;
 
@@ -19,6 +20,10 @@ public class ChunkCoord extends DBVariable<List<Integer>> {
 
     public static ChunkCoord fromBlockPos(BlockPosition pos) {
         return new ChunkCoord(pos.getX() >> 4, pos.getZ() >> 4);
+    }
+
+    public static ChunkCoord fromLocation(Location location) {
+        return new ChunkCoord(location.getBlockX(), location.getBlockZ());
     }
 
     public int x, z;

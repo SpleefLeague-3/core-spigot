@@ -1,6 +1,7 @@
 package com.spleefleague.core.util.packet;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,9 +29,7 @@ public class ChunkSection {
         paletteBlocks = palette.getBlocks();//Null for the global palette
         if (paletteBlocks != null) {
             paletteBlockSet = new HashSet<>();
-            for (BlockData data : paletteBlocks) {
-                paletteBlockSet.add(data);
-            }
+            Collections.addAll(paletteBlockSet, paletteBlocks);
         } else {
             paletteBlockSet = null;
         }
@@ -64,7 +63,7 @@ public class ChunkSection {
         modified = true;
         if (paletteBlockSet != null) {
             if (paletteBlockSet.add(data)) {
-                paletteBlocks = null;//Invalidate if new element was inserted
+                paletteBlocks = null;
             }
         }
     }

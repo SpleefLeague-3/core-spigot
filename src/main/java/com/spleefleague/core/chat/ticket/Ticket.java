@@ -12,7 +12,7 @@ import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.coreapi.database.annotation.DBField;
 import com.spleefleague.coreapi.database.variable.DBEntity;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,20 +73,23 @@ public class Ticket extends DBEntity {
         }
     }
 
-    protected TextComponent formatSender(String issue) {
-        TextComponent msg = new TextComponent();
+    protected Component formatSender(String issue) {
+        Component component = Component.empty();
 
+        /*
         msg.addExtra(Chat.TICKET_PREFIX + "[Ticket: ");
         msg.addExtra(getSenderPlayer().getChatName());
         msg.addExtra(Chat.TICKET_PREFIX + "] " + Chat.TICKET_ISSUE + issue);
+         */
 
-        return msg;
+        return component;
     }
 
     // Ticket sender sees this one
-    protected TextComponent formatStaff1(CoreOfflinePlayer player, String issue) {
-        TextComponent msg = new TextComponent();
+    protected Component formatStaff1(CoreOfflinePlayer player, String issue) {
+        Component component = Component.empty();
 
+        /*
         msg.addExtra(Chat.TICKET_PREFIX + "[Ticket");
         if (player != null) {
             msg.addExtra(Chat.TICKET_PREFIX + ":");
@@ -94,14 +97,16 @@ public class Ticket extends DBEntity {
         }
         msg.addExtra(Chat.TICKET_PREFIX + "] ");
         msg.addExtra(Chat.TICKET_ISSUE + issue);
+         */
 
-        return msg;
+        return component;
     }
 
     // Staff sees this one
-    protected TextComponent formatStaff2(CoreOfflinePlayer player, String issue) {
-        TextComponent msg = new TextComponent();
+    protected Component formatStaff2(CoreOfflinePlayer player, String issue) {
+        Component component = Component.empty();
 
+        /*
         msg.addExtra(Chat.TICKET_PREFIX + "[Ticket: ");
         msg.addExtra(getSenderPlayer().getChatName());
         if (player != null) {
@@ -110,8 +115,9 @@ public class Ticket extends DBEntity {
         }
         msg.addExtra(Chat.TICKET_PREFIX + "] ");
         msg.addExtra(Chat.TICKET_ISSUE + issue);
+         */
 
-        return msg;
+        return component;
     }
 
     public void sendResponses(CorePlayer cp) {
@@ -121,6 +127,7 @@ public class Ticket extends DBEntity {
     }
 
     public void sendMessageToSender(CorePlayer staff, String msg) {
+        /*
         if (responseTimeout < System.currentTimeMillis() || staff == null) {
             TextComponent formatted = formatStaff1(staff, msg);
             Chat.sendMessageToPlayer(getSenderPlayer(), formatted);
@@ -131,9 +138,11 @@ public class Ticket extends DBEntity {
         } else {
             Chat.sendMessageToPlayer(staff, "Try again in " + (int) ((responseTimeout - System.currentTimeMillis()) / 1000) + " seconds");
         }
+         */
     }
 
     public void sendMessageToStaff(String msg) {
+        /*
         if (responseTimeout < System.currentTimeMillis()) {
             TextComponent formatted = formatSender(msg);
             resetTimeout();
@@ -141,6 +150,7 @@ public class Ticket extends DBEntity {
         } else {
             Chat.sendMessageToPlayer(getSenderPlayer(), "Try again in " + (int) ((responseTimeout - System.currentTimeMillis()) / 1000) + " seconds");
         }
+         */
     }
 
     public boolean isOpen() {
@@ -148,6 +158,7 @@ public class Ticket extends DBEntity {
     }
 
     public void close(CoreOfflinePlayer staff) {
+        /*
         if (!open) return;
         open = false;
         Chat.sendMessageToPlayer(getSenderPlayer(), Chat.TICKET_PREFIX + "[Ticket]" + Chat.TICKET_ISSUE + " Your ticket has been closed.");
@@ -155,6 +166,7 @@ public class Ticket extends DBEntity {
         TextComponent text = new TextComponent(Chat.TICKET_PREFIX + "[Ticket: ");
         text.addExtra(getSenderPlayer().getChatName());
         text.addExtra(Chat.TICKET_PREFIX + "]" + Chat.TICKET_ISSUE + " Ticket closed.");
+         */
     }
 
 }

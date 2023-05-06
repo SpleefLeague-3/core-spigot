@@ -9,7 +9,6 @@ package com.spleefleague.core.util;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.google.common.collect.Sets;
 import com.spleefleague.core.player.CoreOfflinePlayer;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Entity;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -74,24 +73,24 @@ public class CoreUtils {
         return null;
     }
 
-    public static TextComponent mergePlayerNames(Collection<? extends CoreOfflinePlayer> players) {
-        TextComponent formatted = new TextComponent();
+    public static String mergePlayerNames(Collection<? extends CoreOfflinePlayer> players) {
+        StringBuilder builder = new StringBuilder();
         Iterator<? extends CoreOfflinePlayer> cpit = players.iterator();
         boolean first = true;
         while (cpit.hasNext()) {
             CoreOfflinePlayer cp = cpit.next();
             if (!first) {
                 if (!cpit.hasNext()) {
-                    formatted.addExtra(" and ");
+                    builder.append(" and ");
                 } else {
-                    formatted.addExtra(", ");
+                    builder.append(", ");
                 }
             } else {
                 first = false;
             }
-            formatted.addExtra(cp.getChatName());
+            builder.append(cp.getChatName());
         }
-        return formatted;
+        return builder.toString();
     }
 
     /**

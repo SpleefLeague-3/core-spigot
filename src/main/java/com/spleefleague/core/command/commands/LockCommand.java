@@ -5,7 +5,7 @@ import com.spleefleague.core.command.CoreCommand;
 import com.spleefleague.core.command.annotation.CommandAnnotation;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
-import com.spleefleague.core.world.global.lock.GlobalLock;
+import com.spleefleague.core.world.projectile.global.lock.GlobalLock;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.block.Block;
 

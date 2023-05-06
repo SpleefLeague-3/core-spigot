@@ -9,7 +9,6 @@ package com.spleefleague.core.listener;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.logger.CoreLogger;
-import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 
@@ -17,7 +16,7 @@ import java.util.regex.Pattern;
 
 import com.spleefleague.coreapi.infraction.Infraction;
 import com.spleefleague.coreapi.infraction.InfractionType;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -56,7 +55,7 @@ public class ChatListener implements Listener {
         for (char c : event.getMessage().toCharArray()) {
             if (c >= 20000 && c < 30000) {
                 if (!cp.getRank().hasPermission(CoreRank.DEVELOPER)) {
-                    Chat.sendMessageToPlayerError(cp, new TextComponent("You can't send that!"));
+                    Chat.sendMessageToPlayerError(cp, Component.text("You can't send that!"));
 
                     event.setCancelled(true);
                 }

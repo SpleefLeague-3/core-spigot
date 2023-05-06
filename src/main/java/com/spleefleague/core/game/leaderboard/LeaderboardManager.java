@@ -26,10 +26,14 @@ public class LeaderboardManager {
     public void init() {
         SeasonManager.init();
         leaderboardCol = Core.getInstance().getPluginDB().getCollection("Leaderboards");
-        for (Document doc : leaderboardCol.find(new Document("season", SeasonManager.getCurrentSeason().getIdentifier()))) {
-            CoreLeaderboard leaderboard = new CoreLeaderboard();
-            leaderboard.load(doc);
-            LEADERBOARDS.put(leaderboard.getName(), leaderboard);
+        try {
+            for (Document doc : leaderboardCol.find(new Document("season", SeasonManager.getCurrentSeason().getIdentifier()))) {
+                CoreLeaderboard leaderboard = new CoreLeaderboard();
+                leaderboard.load(doc);
+                LEADERBOARDS.put(leaderboard.getName(), leaderboard);
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
         }
         Bukkit.getScheduler().runTaskTimerAsynchronously(Core.getInstance(), this::refresh, 200L, 200L);
     }

@@ -2,7 +2,7 @@ package com.spleefleague.core.chat;
 
 import com.google.common.collect.Lists;
 import joptsimple.internal.Strings;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
@@ -141,8 +141,8 @@ public class ChatUtils {
         return msgs;
     }
 
-    public static TextComponent centerChat(String msg) {
-        return new TextComponent(centerText(msg, 160));
+    public static Component centerChat(String msg) {
+        return Component.text(centerText(msg, 160));
     }
 
 }

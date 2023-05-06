@@ -8,7 +8,7 @@ package com.spleefleague.core.request;
 
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
-import net.md_5.bungee.api.chat.BaseComponent;
+import net.kyori.adventure.text.Component;
 
 import java.util.function.BiConsumer;
 
@@ -20,7 +20,7 @@ public class PlayerRequest extends Request {
     protected BiConsumer<CorePlayer, CorePlayer> action;
     protected CorePlayer target;
 
-    public PlayerRequest(BiConsumer<CorePlayer, CorePlayer> action, CorePlayer receiver, BaseComponent tag, CorePlayer target) {
+    public PlayerRequest(BiConsumer<CorePlayer, CorePlayer> action, CorePlayer receiver, Component tag, CorePlayer target) {
         super(receiver, tag);
         this.target = target;
         this.action = action;

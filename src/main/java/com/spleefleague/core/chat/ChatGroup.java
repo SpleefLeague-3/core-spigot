@@ -11,7 +11,8 @@ import com.spleefleague.core.player.scoreboard.PersonalScoreboard;
 
 import java.util.*;
 
-import net.md_5.bungee.api.chat.BaseComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -34,7 +35,7 @@ public class ChatGroup {
     }
 
     private final Set<CorePlayer> players = new HashSet<>();
-    private final BaseComponent chatTag;
+    private final Component chatTag;
 
     private String scoreboardName = "empty";
     private final Map<String, SimpleScore> scores = new HashMap<>();
@@ -44,7 +45,7 @@ public class ChatGroup {
     private static int NEXT_ID = 0;
     private final int chatId;
 
-    public ChatGroup(BaseComponent chatTag) {
+    public ChatGroup(Component chatTag) {
         //addTeam("lastslotempty", Strings.repeat(' ', 30));
         this.chatTag = chatTag;
         this.chatId = NEXT_ID++;
@@ -89,54 +90,22 @@ public class ChatGroup {
         StringBuilder str = new StringBuilder();
         while (id >= 0) {
             switch (id % 16) {
-                case 0:
-                    str.append(ChatColor.AQUA);
-                    break;
-                case 1:
-                    str.append(ChatColor.BLACK);
-                    break;
-                case 2:
-                    str.append(ChatColor.BLUE);
-                    break;
-                case 3:
-                    str.append(ChatColor.DARK_AQUA);
-                    break;
-                case 4:
-                    str.append(ChatColor.DARK_BLUE);
-                    break;
-                case 5:
-                    str.append(ChatColor.DARK_GRAY);
-                    break;
-                case 6:
-                    str.append(ChatColor.DARK_GREEN);
-                    break;
-                case 7:
-                    str.append(ChatColor.DARK_PURPLE);
-                    break;
-                case 8:
-                    str.append(ChatColor.DARK_RED);
-                    break;
-                case 9:
-                    str.append(ChatColor.GOLD);
-                    break;
-                case 10:
-                    str.append(ChatColor.GRAY);
-                    break;
-                case 11:
-                    str.append(ChatColor.GREEN);
-                    break;
-                case 12:
-                    str.append(ChatColor.LIGHT_PURPLE);
-                    break;
-                case 13:
-                    str.append(ChatColor.RED);
-                    break;
-                case 14:
-                    str.append(ChatColor.WHITE);
-                    break;
-                case 15:
-                    str.append(ChatColor.YELLOW);
-                    break;
+                case 0 ->  str.append(NamedTextColor.AQUA);
+                case 1 ->  str.append(NamedTextColor.BLACK);
+                case 2 ->  str.append(NamedTextColor.BLUE);
+                case 3 ->  str.append(NamedTextColor.DARK_AQUA);
+                case 4 ->  str.append(NamedTextColor.DARK_BLUE);
+                case 5 ->  str.append(NamedTextColor.DARK_GRAY);
+                case 6 ->  str.append(NamedTextColor.DARK_GREEN);
+                case 7 ->  str.append(NamedTextColor.DARK_PURPLE);
+                case 8 ->  str.append(NamedTextColor.DARK_RED);
+                case 9 ->  str.append(NamedTextColor.GOLD);
+                case 10 -> str.append(NamedTextColor.GRAY);
+                case 11 -> str.append(NamedTextColor.GREEN);
+                case 12 -> str.append(NamedTextColor.LIGHT_PURPLE);
+                case 13 -> str.append(NamedTextColor.RED);
+                case 14 -> str.append(NamedTextColor.WHITE);
+                case 15 -> str.append(NamedTextColor.YELLOW);
             }
             id -= 16;
         }
@@ -362,13 +331,12 @@ public class ChatGroup {
      */
     public void sendMessage(String msg) {
         for (CorePlayer cp : players) {
-            Chat.sendMessageToPlayer(cp, chatTag.toPlainText() + Chat.DEFAULT + msg);
+            Chat.sendMessageToPlayer(cp, chatTag.toString() + Chat.DEFAULT + msg);
         }
     }
 
-    public void sendMessage(TextComponent text) {
-        TextComponent message = new TextComponent(chatTag);
-        message.addExtra(text);
+    public void sendMessage(Component component) {
+        Component message = Component.empty().append(chatTag).append(component);
         for (CorePlayer cp : players) {
             Chat.sendMessageToPlayer(cp, message);
         }

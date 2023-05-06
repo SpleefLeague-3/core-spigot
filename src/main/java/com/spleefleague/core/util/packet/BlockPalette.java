@@ -1,10 +1,11 @@
 package com.spleefleague.core.util.packet;
 
-import net.minecraft.core.IdMapper;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_19_R1.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.v1_19_R3.block.data.CraftBlockData;
 
 import java.util.*;
 
@@ -13,8 +14,33 @@ import java.util.*;
  */
 public abstract class BlockPalette {
 
+    public static class BlockDataConverter {
+
+        public static NamespacedKey blockDataToNamespacedKey(BlockData blockData) {
+            if (blockData == null) {
+                return null;
+            }
+
+            Material material = blockData.getMaterial();
+            return material.getKey();
+        }
+
+        public static BlockData namespacedKeyToBlockData(NamespacedKey namespacedKey) {
+            if (namespacedKey == null) {
+                return null;
+            }
+
+            Material material = Material.matchMaterial(namespacedKey.getKey());
+            if (material == null) {
+                throw new IllegalArgumentException("Invalid NamespacedKey provided: " + namespacedKey.toString());
+            }
+
+            return material.createBlockData();
+        }
+
+    }
+
     public static final BlockPalette GLOBAL = GlobalBlockPalette.instance();
-    private static final IdMapper<BlockState> REGISTRY_ID = Block.BLOCK_STATE_REGISTRY;
 
     public abstract BlockData[] decode(byte[] data);
 
@@ -31,13 +57,17 @@ public abstract class BlockPalette {
     public abstract boolean includePaletteLength();
 
     public static int blockDataToId(BlockData data) {
-        return REGISTRY_ID.getId(((CraftBlockData) data).getState());
+        //return REGISTRY_ID.getId(((CraftBlockData) data).getState());
+        return 0;
     }
 
     public static BlockData blockDataFromId(int id) {
+        /*
         BlockState ibd = REGISTRY_ID.byId(id);
         assert ibd != null;
         return CraftBlockData.fromData(ibd);
+         */
+        return null;
     }
 
     public static BlockPalette createPalette(int[] data, int bitsPerBlock) {
@@ -116,7 +146,8 @@ public abstract class BlockPalette {
             this.bitsPerBlock = bitsPerBlock;
             for (int i = 0; i < data.length; i++) {
                 int id = data[i];
-                BlockData blockData = CraftBlockData.fromData(Objects.requireNonNull(REGISTRY_ID.byId(id)));
+                //BlockData blockData = CraftBlockData.fromData(Objects.requireNonNull(REGISTRY_ID.byId(id)));
+                BlockData blockData = CraftBlockData.newData(Material.STONE, null);
                 idToBlock.add(blockData);
                 blockToId.put(blockData, i);
             }

@@ -26,16 +26,14 @@ import javax.annotation.Nullable;
 
 import com.spleefleague.coreapi.chat.ChatColor;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_19_R1.command.CraftBlockCommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
@@ -171,7 +169,7 @@ public class CoreCommand extends Command {
                             @LiteralArg("help") String l) {
         usage(sender, ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "" + ChatColor.BOLD + "------------------------");
 
-        TextComponent component;
+        Component component;
 
         for (MethodInfo methodInfo : helpMethods) {
             boolean hasPerms = false;
@@ -185,9 +183,9 @@ public class CoreCommand extends Command {
                 if (!hasPerms) continue;
             }
 
-            component = new TextComponent();
-            component.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-            component.addExtra("/" + getName() + " ");
+            component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text("/" + getName() + " "));
 
             StringBuilder builder = new StringBuilder();
 
@@ -233,11 +231,10 @@ public class CoreCommand extends Command {
                 builder.append(" ");
             }
 
-            component.addExtra(builder.toString());
-
-            component.addExtra(ChatColor.DARK_GRAY + "-> ");
-
-            component.addExtra(methodInfo.description);
+            component = component
+                    .append(Component.text(builder.toString()))
+                    .append(Component.text(ChatColor.DARK_GRAY + "-> "))
+                    .append(Component.text(methodInfo.description));
 
             usage(sender, component);
         }
@@ -596,16 +593,16 @@ public class CoreCommand extends Command {
         CorePlayer cp = null;
         boolean success = false;
         BlockCommandSender bcs = null;
-        CraftBlockCommandSender cbcs;
-        CommandSourceStack listener = null;
+        //CraftBlockCommandSender cbcs;
+        //CommandSourceStack listener = null;
         Location loc;
         if (cs instanceof Player) {
             cp = Core.getInstance().getPlayers().get(cs.getName());
             loc = cp.getPlayer().getLocation();
         } else if (cs instanceof BlockCommandSender) {
             bcs = (BlockCommandSender) cs;
-            cbcs = (CraftBlockCommandSender) bcs;
-            listener = cbcs.getWrapper();
+            //cbcs = (CraftBlockCommandSender) bcs;
+            //listener = cbcs.getWrapper();
             loc = bcs.getBlock().getLocation().clone().add(0.5, 0.5, 0.5);
         } else {
             loc = new Location(Core.OVERWORLD, 0, 0, 0);
@@ -898,7 +895,7 @@ public class CoreCommand extends Command {
                                 if (success) {
                                     //listener.a(3);
                                 } else {
-                                    listener.sendFailure(Component.literal("Failure"));
+                                    //listener.sendFailure(Component.literal("Failure"));
                                 }
                                 return success;
                             } else {
@@ -918,7 +915,8 @@ public class CoreCommand extends Command {
                                 }
                                 return true;
                             }
-                        } catch (SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                        } catch (SecurityException | IllegalAccessException | IllegalArgumentException |
+                                 InvocationTargetException ex) {
                             //error(cp, "Command error");
                             CoreLogger.logError(null, ex);
                         }
@@ -933,7 +931,7 @@ public class CoreCommand extends Command {
             error(cp, CoreError.UNABLE);
         }
         if (bcs != null) {
-            listener.sendFailure(Component.literal("Failure"));
+            //listener.sendFailure(Component.literal("Failure"));
             //listener.a(3);
         }
         return true;
@@ -1249,8 +1247,8 @@ public class CoreCommand extends Command {
         Core.getInstance().sendMessage(cp, msg);
     }
 
-    protected void success(CorePlayer cp, TextComponent msg) {
-        Core.getInstance().sendMessage(cp, msg);
+    protected void success(CorePlayer cp, Component component) {
+        Core.getInstance().sendMessage(cp, component);
     }
 
     protected void error(CommandSender cs, String msg) {
@@ -1277,7 +1275,7 @@ public class CoreCommand extends Command {
         Core.getInstance().sendMessage(cp, msg);
     }
 
-    protected void usage(CorePlayer cp, TextComponent msg) {
-        Core.getInstance().sendMessage(cp, msg);
+    protected void usage(CorePlayer cp, Component component) {
+        Core.getInstance().sendMessage(cp, component);
     }
 }

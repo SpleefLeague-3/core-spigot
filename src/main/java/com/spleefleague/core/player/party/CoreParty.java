@@ -16,7 +16,7 @@ import java.util.*;
 
 import com.spleefleague.coreapi.database.variable.DBPlayer;
 import com.spleefleague.coreapi.party.Party;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
 
 /**
  * @author NickM13
@@ -70,22 +70,22 @@ public class CoreParty extends Party {
         return localPlayers.values();
     }
 
-    public TextComponent getPlayersFormatted() {
-        TextComponent message = new TextComponent("");
+    public Component getPlayersFormatted() {
+        Component message = Component.empty();
 
         Iterator<Map.Entry<UUID, CorePlayer>> it = playerSet.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<UUID, CorePlayer> entry = it.next();
-            message.addExtra(entry.getValue().getChatName());
+            message = message.append(entry.getValue().getChatName());
             if (it.hasNext()) {
-                message.addExtra(new TextComponent(", "));
+                message = message.append(Component.text(", "));
             }
         }
 
         return message;
     }
 
-    public void sendMessage(TextComponent text) {
+    public void sendMessage(Component text) {
         for (CorePlayer cp : localPlayers.values()) {
             Core.getInstance().sendMessage(cp, text);
         }

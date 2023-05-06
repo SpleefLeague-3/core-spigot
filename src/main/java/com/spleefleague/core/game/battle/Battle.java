@@ -20,17 +20,15 @@ import com.spleefleague.core.player.BattleState;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.purse.CoreCurrency;
 import com.spleefleague.core.plugin.CorePlugin;
-import com.spleefleague.core.settings.Settings;
 import com.spleefleague.core.util.variable.Dimension;
 import com.spleefleague.core.util.variable.Point;
 import com.spleefleague.core.util.variable.Position;
-import com.spleefleague.core.world.game.GameWorld;
+import com.spleefleague.core.world.projectile.game.GameWorld;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattlePing;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -196,7 +194,7 @@ public abstract class Battle<BP extends BattlePlayer> {
      */
     protected abstract void sendStartMessage();
 
-    protected final void sendNotification(TextComponent text) {
+    protected final void sendNotification(Component text) {
         getPlugin().sendMessageFriends(text, ChatChannel.GLOBAL, battlers.keySet().stream().map(CorePlayer::getUniqueId).collect(Collectors.toSet()));
     }
 
@@ -786,10 +784,10 @@ public abstract class Battle<BP extends BattlePlayer> {
 
     protected final void sendRequeueMessage() {
         for (BattlePlayer bp : battlers.values()) {
-            TextComponent requeueText = new TextComponent(Chat.TAG_BRACE + " [" + Chat.SUCCESS + "Queue Again" + Chat.TAG_BRACE + "]");
-            requeueText.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to queue again").create()));
-            requeueText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/requeue"));
-            bp.getCorePlayer().sendMessage(requeueText);
+            Component requeueComponent = Component.text(Chat.TAG_BRACE + " [" + Chat.SUCCESS + "Queue Again" + Chat.TAG_BRACE + "]")
+                    .hoverEvent(HoverEvent.showText(Component.text("Click to queue again")))
+                    .clickEvent(ClickEvent.runCommand("/requeue"));
+            bp.getCorePlayer().sendMessage(requeueComponent);
         }
     }
 

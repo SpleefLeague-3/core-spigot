@@ -9,7 +9,6 @@ package com.spleefleague.core.player.scoreboard;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -48,18 +47,6 @@ public class PersonalScoreboard {
                 team.addEntry(cp2.getName());
             }
         }
-
-        /*
-        List<CorePlayer> toScoreboardify = new ArrayList<>();
-        for (CorePlayer cp2 : Core.getInstance().getPlayers().getAll()) {
-            if (cp2.getOnlineState() != DBPlayer.OnlineState.OFFLINE) {
-                toScoreboardify.add(cp2);
-            }
-        }
-        if (!toScoreboardify.isEmpty()) {
-            Core.sendPacket(cp, PacketUtils.createAddPlayerPacket(toScoreboardify));
-        }
-         */
     }
 
     public static void closePlayerScoreboard(CorePlayer cp) {
@@ -101,8 +88,6 @@ public class PersonalScoreboard {
         scoreboard.registerNewTeam("Players");
         Objects.requireNonNull(scoreboard.getTeam("Players")).setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
         tabList = new PersonalTablist(owner);
-
-        ((CraftServer) Bukkit.getServer()).getServer().getPlayerList();
 
         resetObjective();
 

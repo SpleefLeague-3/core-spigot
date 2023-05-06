@@ -68,12 +68,14 @@ public abstract class BattleRequest {
     protected abstract boolean attemptStartRequest(CorePlayer cp, int total, @Nullable String requestValue);
 
     protected void startRequestMessage(CorePlayer cp) {
+        /*
         TextComponent text = new TextComponent("Request to ");
         text.addExtra(getChatName());
         text.addExtra(" was started by ");
         text.addExtra(cp.getChatName());
         text.addExtra(".");
         battle.getChatGroup().sendMessage(text);
+         */
     }
 
     /**

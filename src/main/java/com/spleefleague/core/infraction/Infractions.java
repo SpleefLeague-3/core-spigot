@@ -6,6 +6,7 @@ import com.spleefleague.coreapi.infraction.Infraction;
 import com.spleefleague.coreapi.infraction.InfractionType;
 import com.spleefleague.coreapi.utils.TimeUtils;
 import com.spleefleague.coreapi.utils.packet.spigot.player.PacketSpigotPlayerInfraction;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.OfflinePlayer;
 
@@ -32,9 +33,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have secretly muted " + target.getName() + " for " + TimeUtils.timeToString(millis));
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have secretly muted " + target.getName() + " for " + TimeUtils.timeToString(millis)));
         }
     }
 
@@ -56,9 +55,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have muted " + target.getName() + " for " + TimeUtils.timeToString(millis));
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have muted " + target.getName() + " for " + TimeUtils.timeToString(millis)));
         }
     }
 
@@ -79,9 +76,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have unmuted " + target.getName());
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have unmuted " + target.getName()));
         }
     }
 
@@ -104,9 +99,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have kicked " + target.getName());
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have kicked " + target.getName()));
         }
     }
 
@@ -127,9 +120,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have banned " + target.getName() + " for " + reason);
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have banned " + target.getName() + " for " + reason));
         }
     }
 
@@ -150,9 +141,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have unbanned " + target.getName());
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have unbanned " + target.getName()));
         }
     }
 
@@ -173,9 +162,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have kicked " + target.getName());
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have kicked " + target.getName()));
         }
     }
 
@@ -197,10 +184,7 @@ public class Infractions {
         Core.getInstance().sendPacket(new PacketSpigotPlayerInfraction(infraction));
 
         if (sender != null) {
-            TextComponent component = new TextComponent();
-            component.addExtra("You have warned " + target.getName() + " for " +
-                    reason);
-            Core.getInstance().sendMessage(sender, component);
+            Core.getInstance().sendMessage(sender, Component.text("You have warned " + target.getName() + " for " + reason));
         }
     }
 

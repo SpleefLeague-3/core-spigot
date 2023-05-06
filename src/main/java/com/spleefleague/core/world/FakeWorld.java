@@ -12,16 +12,12 @@ import com.spleefleague.core.logger.CoreLogger;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.util.variable.MultiBlockChange;
 import com.spleefleague.core.world.build.BuildWorld;
-import com.spleefleague.core.world.global.GlobalWorld;
+import com.spleefleague.core.world.projectile.global.GlobalWorld;
 import com.spleefleague.core.util.PacketUtils;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.network.protocol.game.PacketPlayInUseItem;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -46,13 +42,19 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
 
         Core.getInstance().addTask(Bukkit.getScheduler().runTaskTimer(Core.getInstance(), () -> {
             Core.getInstance().getPlayers().getAllLocal().forEach(cp -> {
-                if (FakeUtils.isOnGround(cp)) {
-                    Entity entity = ((CraftEntity) cp.getPlayer()).getHandle();
+                boolean onGround = FakeUtil.isOnGround(cp);
+                cp.setOnGround(onGround);
 
-                    entity.setDeltaMovement(entity.getDeltaMovement().x, 0, entity.getDeltaMovement().z);
+                if (onGround) {
+                    Player player = cp.getPlayer();
+                    Vector velocity = player.getVelocity();
+                    if (velocity.getY() < 0) {
+                        //velocity.setY(0);
+                        //player.setVelocity(velocity);
+                    }
                 }
             });
-        }, 10, 2));
+        }, 0L, 1L));
 
         Core.addProtocolPacketAdapter(new PacketAdapter(Core.getInstance(), PacketType.Play.Client.BLOCK_DIG) {
             @Override
@@ -95,13 +97,19 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
             public void onPacketReceiving(PacketEvent event) {
                 CorePlayer cp = Core.getInstance().getPlayers().get(event.getPlayer());
                 if (cp == null) return;
+                BlockPosition blockPosition = event.getPacket().getBlockPositionModifier().read(0);
+                int hand = event.getPacket().getIntegers().read(0);
+                int face = event.getPacket().getIntegers().read(1);
+                /*
                 ServerboundUseItemOnPacket packet = (ServerboundUseItemOnPacket) event.getPacket().getHandle();
                 BlockPos bp = packet.getHitResult().getBlockPos();
                 Direction direction = packet.getHitResult().getDirection();
                 BlockPos br = bp.relative(direction);
-
                 BlockPosition blockPosition = new BlockPosition(bp.getX(), bp.getY(), bp.getZ());
                 BlockPosition blockRelative = new BlockPosition(br.getX(), br.getY(), br.getZ());
+                 */
+
+                BlockPosition blockRelative = blockPosition.add(new BlockPosition(0, 1, 0));
 
                 Iterator<FakeWorld<?>> fit = cp.getFakeWorlds();
                 while (fit.hasNext()) {
@@ -331,6 +339,12 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
         ChunkCoord chunkCoord = ChunkCoord.fromBlockPos(pos);
         if (!fakeChunks.containsKey(chunkCoord)) return null;
         return fakeChunks.get(chunkCoord).get(getChunkRelativePos(pos));
+    }
+
+    public final FakeBlock getFakeBlock(Location location) {
+        ChunkCoord chunkCoord = ChunkCoord.fromLocation(location);
+        if (!fakeChunks.containsKey(chunkCoord)) return null;
+        return fakeChunks.get(chunkCoord).get(getChunkRelativePos(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
     }
 
     public final Map<Short, FakeBlock> getFakeChunk(ChunkCoord chunkCoord) {
@@ -577,6 +591,10 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
 
     private static short getChunkRelativePos(BlockPosition pos) {
         return (short) ((pos.getX() & 0xF) + ((pos.getZ() & 0xF) << 4) + ((pos.getY() & 0xFF) << 8));
+    }
+
+    private static short getChunkRelativePos(int x, int y, int z) {
+        return (short) ((x & 0xF) + ((z & 0xF) << 4) + ((y & 0xFF) << 8));
     }
 
     private static BlockPosition getBlockPos(ChunkCoord chunkCoord, short pos) {

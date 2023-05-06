@@ -10,14 +10,10 @@ import com.spleefleague.coreapi.database.annotation.DBField;
 import com.spleefleague.coreapi.database.annotation.DBLoad;
 import com.spleefleague.coreapi.database.annotation.DBSave;
 import com.spleefleague.coreapi.database.variable.DBEntity;
-import net.minecraft.core.IdMapper;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import org.bson.Document;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_19_R1.block.CraftBlockState;
-import org.bukkit.craftbukkit.v1_19_R1.block.CraftBlockStates;
 
 import java.util.*;
 
@@ -31,7 +27,7 @@ import java.util.*;
 public class BuildStructure extends DBEntity {
 
     private static final int STRUCTURES_VERSION = 3;
-    private static final IdMapper<BlockState> REGISTRY = Block.BLOCK_STATE_REGISTRY;
+    //private static final IdMapper<BlockState> REGISTRY = Block.BLOCK_STATE_REGISTRY;
 
     @DBField
     private String name;
@@ -54,6 +50,7 @@ public class BuildStructure extends DBEntity {
 
     @DBSave(fieldName = "blocks")
     protected Document saveFakeBlocks() {
+        /*
         Map<BlockData, Short> blockToIndex = new HashMap<>();
         List<Integer> palette = new ArrayList<>();
         palette.add(REGISTRY.getId(((CraftBlockState) Material.AIR.createBlockData()).getHandle()));
@@ -82,10 +79,13 @@ public class BuildStructure extends DBEntity {
         doc.append("blocks", blocks);
 
         return doc;
+         */
+        return null;
     }
 
     @DBLoad(fieldName = "blocks")
     protected void loadFakeBlocks(Document doc) {
+        /*
         if (version == null || version == 0) {
             List<String> paletteNames = doc.get("palette", List.class);
             if (paletteNames != null) {
@@ -209,6 +209,7 @@ public class BuildStructure extends DBEntity {
             }
         }
         version = STRUCTURES_VERSION;
+         */
     }
 
     public String getName() {

@@ -29,15 +29,14 @@ import com.spleefleague.core.util.variable.*;
 import com.spleefleague.core.world.ChunkCoord;
 import com.spleefleague.core.world.FakeWorld;
 import com.spleefleague.core.world.build.BuildWorld;
-import com.spleefleague.core.world.global.GlobalWorld;
+import com.spleefleague.core.world.projectile.global.GlobalWorld;
 import com.spleefleague.coreapi.database.annotation.DBField;
 import com.spleefleague.coreapi.infraction.Infraction;
 import com.spleefleague.coreapi.infraction.InfractionType;
 import com.spleefleague.coreapi.utils.packet.spigot.chat.PacketSpigotChatChannelJoin;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -80,6 +79,7 @@ public class CorePlayer extends CoreOfflinePlayer {
     private long lastAction;
     private boolean afk;
     private boolean afkWarned;
+    private boolean onGround = true;
 
     private CoreLocation lastLocation;
     private CoreLocation checkpoint;
@@ -338,16 +338,7 @@ public class CorePlayer extends CoreOfflinePlayer {
      * @return Player's ping
      */
     public int getPing() {
-        ServerPlayer serverPlayer = (ServerPlayer) getPlayer();
-        return serverPlayer.latency;
-//        return getPlayer().getPing();
-
-//        try {
-//            EntityPlayer entityPlayer = (EntityPlayer) getPlayer().getClass().getMethod("getHandle").invoke(getPlayer());
-//            return entityPlayer.ping;
-//        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-//            return -1;
-//        }
+        return getPlayer().getPing();
     }
 
     /**
@@ -357,10 +348,12 @@ public class CorePlayer extends CoreOfflinePlayer {
         int ping = getPing();
         String str = "";
 
+        /*
         if (ping <= 30) str += ChatColor.GREEN;
         else if (ping <= 100) str += ChatColor.DARK_GREEN;
         else if (ping <= 250) str += ChatColor.GOLD;
         else str += ChatColor.RED;
+        */
 
         str += ping + "ms";
         return str;
@@ -822,10 +815,10 @@ public class CorePlayer extends CoreOfflinePlayer {
     /**
      * Send BaseComponent message to player
      *
-     * @param message BaseComponent
+     * @param component Component
      */
-    public void sendMessage(BaseComponent... message) {
-        getPlayer().spigot().sendMessage(message);
+    public void sendMessage(Component component) {
+        getPlayer().sendMessage(component);
     }
 
     /**
@@ -841,11 +834,15 @@ public class CorePlayer extends CoreOfflinePlayer {
         getPlayer().sendTitle(title, subtitle, fadeIn, stay, fadeOut);
     }
 
-    public void sendHotbarText(String text) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.CHAT);
-        packet.getChatTypes().write(0, EnumWrappers.ChatType.GAME_INFO);
-        packet.getChatComponents().write(0, WrappedChatComponent.fromText(text));
-        Core.sendPacket(this, packet);
+    public void sendHotbarText(String message) {
+        PacketContainer packet = Core.getProtocolManager()
+                .createPacket(PacketType.Play.Server.SET_ACTION_BAR_TEXT);
+        packet.getChatComponents().write(0, WrappedChatComponent.fromText(message));
+        try {
+            Core.sendPacket(this, packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -879,8 +876,12 @@ public class CorePlayer extends CoreOfflinePlayer {
         getPlayer().getInventory().setItemInMainHand(itemStack);
     }
 
+    public void setOnGround(boolean onGround) {
+        this.onGround = onGround;
+    }
+
     public boolean isOnGround() {
-        return ((CraftPlayer) getPlayer()).isOnGround();
+        return onGround;
     }
 
     public enum ResultWhitelist {

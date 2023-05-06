@@ -6,31 +6,25 @@
 
 package com.spleefleague.core.command.commands;
 
-import com.mongodb.client.MongoCursor;
 import com.spleefleague.core.Core;
-import com.spleefleague.core.chat.ChatUtils;
-import com.spleefleague.core.command.annotation.CommandAnnotation;
 import com.spleefleague.core.chat.Chat;
+import com.spleefleague.core.chat.ChatUtils;
 import com.spleefleague.core.command.CoreCommand;
-import com.spleefleague.core.infraction.CoreInfractionManager;
+import com.spleefleague.core.command.annotation.CommandAnnotation;
 import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 import com.spleefleague.core.util.TimeUtils;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import com.spleefleague.coreapi.database.variable.DBPlayer;
 import com.spleefleague.coreapi.infraction.Infraction;
-import com.spleefleague.coreapi.infraction.InfractionManager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bson.Document;
 import org.bukkit.OfflinePlayer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author NickM13
@@ -57,6 +51,7 @@ public class PlayerInfoCommand extends CoreCommand {
             error(sender, op.getName() + " has never logged in!");
             return;
         }
+        /*
 
         List<TextComponent> textComponents = new ArrayList<>();
         TextComponent component;
@@ -79,18 +74,19 @@ public class PlayerInfoCommand extends CoreCommand {
         if (cp.getOnlineState() == DBPlayer.OnlineState.OFFLINE)
             textComponents.add(new TextComponent(Chat.TAG_BRACE + "Last seen: " +
                     Chat.DEFAULT + getLastSeen(cp) + "\n"));
-        /*
-        textComponents.add(new TextComponent(Chat.TAG_BRACE + "IP: " +
-                Chat.DEFAULT + getIp(cp) + "\n"));
-        textComponents.add(new TextComponent(Chat.TAG_BRACE + "Shared accounts: " +
-                Chat.DEFAULT + getSharedAccounts(cp) + "\n"));
-        */
         textComponents.add(new TextComponent(Chat.TAG_BRACE + "Total online time: " +
                 Chat.DEFAULT + getOnlineTime(cp) + "\n"));
         textComponents.add(new TextComponent(Chat.TAG_BRACE + "Total active time: " +
                 Chat.DEFAULT + getActiveTime(cp) + "\n"));
 
         sender.sendMessage(textComponents.toArray(new TextComponent[0]));
+        */
+        /*
+        textComponents.add(new TextComponent(Chat.TAG_BRACE + "IP: " +
+                Chat.DEFAULT + getIp(cp) + "\n"));
+        textComponents.add(new TextComponent(Chat.TAG_BRACE + "Shared accounts: " +
+                Chat.DEFAULT + getSharedAccounts(cp) + "\n"));
+        */
     }
 
     private String getMuted(CoreOfflinePlayer cp) {

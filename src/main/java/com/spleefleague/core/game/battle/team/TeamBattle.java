@@ -14,7 +14,8 @@ import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.plugin.CorePlugin;
 import com.spleefleague.core.util.CoreUtils;
 import com.spleefleague.coreapi.utils.packet.spigot.battle.PacketSpigotBattleEnd;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
@@ -274,16 +275,18 @@ public abstract class TeamBattle<BP extends BattlePlayer> extends Battle<BP> {
             int initialElo = battler.getCorePlayer().getRatings().getElo(getMode().getName(), getMode().getSeason());
             int toChange = isWinner ? eloChange : -eloChange;
             battler.getCorePlayer().getRatings().addRating(getMode().getName(), getMode().getSeason(), toChange);
-            TextComponent text = new TextComponent();
-            text.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-            text.addExtra(" You have " + (toChange >= 0 ? "gained " : "lost "));
-            text.addExtra(ChatColor.GREEN + "" + eloChange);
-            text.addExtra(" Rating Points (");
-            text.addExtra(ChatColor.RED + "" + initialElo);
-            text.addExtra("->");
-            text.addExtra(ChatColor.GREEN + "" + (initialElo + toChange));
-            text.addExtra(")");
-            battler.getCorePlayer().sendMessage(text);
+
+            Component component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text(" You have " + (toChange >= 0 ? "gained " : "lost ")))
+                    .append(Component.text(eloChange).color(NamedTextColor.GREEN))
+                    .append(Component.text(" Rating Points ("))
+                    .append(Component.text(initialElo).color(NamedTextColor.RED))
+                    .append(Component.text("->"))
+                    .append(Component.text((initialElo + toChange)).color(NamedTextColor.GREEN))
+                    .append(Component.text(")"));
+
+            battler.getCorePlayer().sendMessage(component);
         }
         return eloChange;
     }
@@ -297,12 +300,12 @@ public abstract class TeamBattle<BP extends BattlePlayer> extends Battle<BP> {
      */
     public void endBattleTeam(TeamBattleTeam<BP> winner) {
         if (winner == null) {
-            TextComponent text = new TextComponent();
-            text.setColor(ChatColor.GRAY.asBungee());
-            text.addExtra("Battle between ");
-            text.addExtra(CoreUtils.mergePlayerNames(battlers.keySet()));
-            text.addExtra(" was peacefully concluded.");
-            sendNotification(text);
+            Component component = Component.empty()
+                    .color(NamedTextColor.GRAY)
+                    .append(Component.text("Battle between "))
+                    .append(Component.text(CoreUtils.mergePlayerNames(battlers.keySet())))
+                    .append(Component.text(" was peacefully concluded."));
+            sendNotification(component);
         } else {
             TeamBattleTeam<BP> loser = null;
             for (TeamBattleTeam<BP> tbt : teams) {

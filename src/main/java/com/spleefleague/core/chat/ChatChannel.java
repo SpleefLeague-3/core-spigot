@@ -10,8 +10,10 @@ import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CorePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 import com.spleefleague.coreapi.chat.Chat;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.network.chat.Component;
+import com.spleefleague.coreapi.chat.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -23,12 +25,12 @@ public enum ChatChannel {
 
     ADMIN("Admin",
             null,
-            net.md_5.bungee.api.ChatColor.RED,
+            ChatColor.RED,
             cp -> cp.getRank().hasPermission(CoreRank.ADMIN),
             null),
     GAMES("Games",
             null,
-            net.md_5.bungee.api.ChatColor.AQUA,
+            ChatColor.AQUA,
             null,
             null),
     GLOBAL("Global",
@@ -50,87 +52,85 @@ public enum ChatChannel {
                     return Core.getInstance().getPlayers().getAllLocal();
                 }
             }),
-            net.md_5.bungee.api.ChatColor.GRAY,
+            ChatColor.GRAY,
             cp -> cp.getRank().hasPermission(CoreRank.ADMIN),
             null),
     LOGIN("Login",
             null,
-            net.md_5.bungee.api.ChatColor.GRAY,
+            ChatColor.GRAY,
             cp -> cp.getRank().hasPermission(CoreRank.ADMIN),
             null),
     PARTY("Party",
             null,
-            net.md_5.bungee.api.ChatColor.AQUA,
+            ChatColor.AQUA,
             cp -> cp.getParty() != null,
             null),
     STAFF("Staff",
             null,
-            net.md_5.bungee.api.ChatColor.LIGHT_PURPLE,
+            ChatColor.LIGHT_PURPLE,
             cp -> cp.getRank().hasPermission(CoreRank.TEMP_MOD),
             null),
     TICKET("Ticket",
             null,
-            net.md_5.bungee.api.ChatColor.GOLD,
+            ChatColor.GOLD,
             cp -> cp.getRank().hasPermission(CoreRank.TEMP_MOD),
             null),
     VIP("VIP",
             null,
-            net.md_5.bungee.api.ChatColor.DARK_PURPLE,
+            ChatColor.DARK_PURPLE,
             cp -> cp.getRank().hasPermission(CoreRank.VIP),
             null);
 
     private final String name;
     private final Function<CorePlayer, Collection<CorePlayer>> playerFunc;
-    private final net.md_5.bungee.api.ChatColor tagColor;
+    private final ChatColor tagColor;
     private final Function<CorePlayer, Boolean> available;
-    private final String playerChatColor;
 
-    private final TextComponent tagComponent;
-    private final TextComponent playerMessageComponent;
+    private final Component tagComponent;
+    private final Component playerMessageComponent;
 
     ChatChannel(String name,
                 Function<CorePlayer, Collection<CorePlayer>> playerFunc,
-                net.md_5.bungee.api.ChatColor tagColor,
+                ChatColor tagColor,
                 Function<CorePlayer, Boolean> available,
                 String playerChatColor) {
         this.name = name;
         this.playerFunc = playerFunc;
         this.tagColor = tagColor;
         this.available = available;
-        this.playerChatColor = playerChatColor == null ? Chat.PLAYER_CHAT : playerChatColor;
+        String playerChatColor1 = playerChatColor == null ? Chat.PLAYER_CHAT : playerChatColor;
 
         if (tagColor != null) {
-            tagComponent = new TextComponent(com.spleefleague.coreapi.chat.Chat.TAG_BRACE + "[" + tagColor + name + Chat.TAG_BRACE + "] ");
+            tagComponent = Component.text(com.spleefleague.coreapi.chat.Chat.TAG_BRACE + "[" + tagColor + name + Chat.TAG_BRACE + "] ");
         } else {
-            tagComponent = new TextComponent();
+            tagComponent = Component.empty();
         }
 
-
-
-        playerMessageComponent = new TextComponent();
-        for (com.spleefleague.coreapi.chat.ChatColor chatColor : com.spleefleague.coreapi.chat.ChatColor.getChatColors(this.playerChatColor)) {
+        Component playerMessageComponent1 = Component.empty();
+        for (com.spleefleague.coreapi.chat.ChatColor chatColor : com.spleefleague.coreapi.chat.ChatColor.getChatColors(playerChatColor1)) {
             switch (chatColor) {
                 case RESET:
                     break;
                 case STRIKETHROUGH:
-                    playerMessageComponent.setStrikethrough(true);
+                    playerMessageComponent1 = playerMessageComponent1.decorate(TextDecoration.STRIKETHROUGH);
                     break;
                 case BOLD:
-                    playerMessageComponent.setBold(true);
+                    playerMessageComponent1 = playerMessageComponent1.decorate(TextDecoration.BOLD);
                     break;
                 case UNDERLINE:
-                    playerMessageComponent.setUnderlined(true);
+                    playerMessageComponent1 = playerMessageComponent1.decorate(TextDecoration.UNDERLINED);
                     break;
                 case MAGIC:
-                    playerMessageComponent.setObfuscated(true);
+                    playerMessageComponent1 = playerMessageComponent1.decorate(TextDecoration.OBFUSCATED);
                     break;
                 case ITALIC:
-                    playerMessageComponent.setItalic(true);
+                    playerMessageComponent1 = playerMessageComponent1.decorate(TextDecoration.ITALIC);
                     break;
                 default:
-                    playerMessageComponent.setColor(net.md_5.bungee.api.ChatColor.getByChar(chatColor.getChar()));
+                    playerMessageComponent1 = playerMessageComponent1.color(TextColor.color(chatColor.ordinal()));
             }
         }
+        playerMessageComponent = playerMessageComponent1;
     }
 
     public String getName() {
@@ -145,7 +145,7 @@ public enum ChatChannel {
         return playerFunc;
     }
 
-    public net.md_5.bungee.api.ChatColor getTagColor() {
+    public ChatColor getTagColor() {
         return tagColor;
     }
 
@@ -153,7 +153,7 @@ public enum ChatChannel {
         return tagColor != null;
     }
 
-    public TextComponent getTagComponent() {
+    public Component getTagComponent() {
         return tagComponent;
     }
 
@@ -165,8 +165,8 @@ public enum ChatChannel {
         return isAvailable(cp) && cp.getOptions().getBoolean("Chat:" + name());
     }
 
-    public TextComponent getPlayerMessageBase() {
-        return (TextComponent) playerMessageComponent.duplicate();
+    public Component getPlayerMessageBase() {
+        return playerMessageComponent;
     }
 
 }

@@ -2,14 +2,14 @@ package com.spleefleague.core.player.friends;
 
 import com.spleefleague.core.Core;
 import com.spleefleague.core.player.CoreOfflinePlayer;
-import com.spleefleague.core.player.CoreOfflinePlayer;
 import com.spleefleague.core.player.rank.CoreRank;
 import com.spleefleague.coreapi.chat.ChatColor;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
 import com.spleefleague.coreapi.player.friends.FriendsAction;
 import com.spleefleague.coreapi.player.friends.FriendsList;
 import com.spleefleague.coreapi.utils.packet.spigot.friend.PacketSpigotFriend;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -65,12 +65,11 @@ public class CoreFriendsList extends FriendsList {
     public void sendFriendRemove(CoreOfflinePlayer cp) {
         if (cp == null) return;
         if (!friends.containsKey(cp.getUniqueId())) {
-            TextComponent text = new TextComponent();
-            text.setColor(net.md_5.bungee.api.ChatColor.RED);
-            text.addExtra("You aren't friends with ");
-            text.addExtra(Core.getInstance().getPlayers().get(cp.getUniqueId()).getChatName());
-            text.addExtra("!");
-            Core.getInstance().sendMessage(Core.getInstance().getPlayers().get(cp.getUniqueId()), text);
+            Component component = Component.empty()
+                    .color(NamedTextColor.RED)
+                    .append(Component.text("You aren't friends with "))
+                    .append(Core.getInstance().getPlayers().get(cp.getUniqueId()).getChatName());
+            Core.getInstance().sendMessage(Core.getInstance().getPlayers().get(cp.getUniqueId()), component);
             return;
         }
         friends.remove(cp.getUniqueId());

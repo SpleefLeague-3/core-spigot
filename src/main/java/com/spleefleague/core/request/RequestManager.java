@@ -6,7 +6,6 @@
 
 package com.spleefleague.core.request;
 
-import com.spleefleague.core.Core;
 import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.player.CorePlayer;
 
@@ -16,7 +15,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import net.md_5.bungee.api.chat.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 
 /**
  * @author NickM13
@@ -68,30 +69,30 @@ public class RequestManager {
         }
     }
 
-    public static void sendPlayerRequest(BaseComponent tag, CorePlayer receiver, CorePlayer target, BiConsumer<CorePlayer, CorePlayer> action, BaseComponent... messages) {
+    public static void sendPlayerRequest(Component tag, CorePlayer receiver, CorePlayer target, BiConsumer<CorePlayer, CorePlayer> action, Component message) {
         PlayerRequest request = new PlayerRequest(action, receiver, tag, target);
-        sendRequest(tag, receiver, target.getName(), request, messages);
+        sendRequest(tag, receiver, target.getName(), request, message);
     }
 
-    public static void sendConsoleRequest(BaseComponent tag, CorePlayer receiver, String target, BiConsumer<CorePlayer, String> action, BaseComponent... messages) {
+    public static void sendConsoleRequest(Component tag, CorePlayer receiver, String target, BiConsumer<CorePlayer, String> action, Component message) {
         ConsoleRequest request = new ConsoleRequest(action, receiver, tag, target);
-        sendRequest(tag, receiver, target, request, messages);
+        sendRequest(tag, receiver, target, request, message);
     }
 
-    public static void sendRequest(BaseComponent tag, CorePlayer receiver, String target, Request request, BaseComponent... message) {
+    public static void sendRequest(Component tag, CorePlayer receiver, String target, Request request, Component message) {
         validatePlayer(receiver);
         UUID uuid = UUID.randomUUID();
         requests.get(receiver.getName()).put(uuid, request);
 
-        TextComponent accept = new TextComponent(Chat.TAG_BRACE + "[" + Chat.SUCCESS + "Accept" + Chat.TAG_BRACE + "]");
-        accept.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to accept").create()));
-        accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/request accept " + uuid.toString()));
-        TextComponent decline = new TextComponent(Chat.TAG_BRACE + "[" + Chat.ERROR + "Decline" + Chat.TAG_BRACE + "]");
-        decline.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Click to decline").create()));
-        decline.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/request decline " + uuid.toString()));
+        Component accept = Component.text(Chat.TAG_BRACE + "[" + Chat.SUCCESS + "Accept" + Chat.TAG_BRACE + "]")
+                .hoverEvent(HoverEvent.showText(Component.text("Click to accept")))
+                .clickEvent(ClickEvent.runCommand("/request accept " + uuid));
+        Component decline = Component.text(Chat.TAG_BRACE + "[" + Chat.ERROR + "Decline" + Chat.TAG_BRACE + "]")
+                .hoverEvent(HoverEvent.showText(Component.text("Click to decline")))
+                .clickEvent(ClickEvent.runCommand("/request decline " + uuid));
 
-        receiver.sendMessage(new ComponentBuilder().append(tag).append(" ").append(message).create());
-        receiver.sendMessage(tag, accept, new TextComponent(" "), decline);
+        receiver.sendMessage(Component.empty().append(tag).appendSpace().append(message));
+        receiver.sendMessage(Component.empty().append(tag).append(accept).appendSpace().append(decline));
     }
 
 }

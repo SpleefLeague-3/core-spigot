@@ -5,10 +5,6 @@
  */
 package com.spleefleague.core.player;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.spleefleague.core.Core;
 import com.spleefleague.core.chat.Chat;
 import com.spleefleague.core.menu.InventoryMenuSkullManager;
@@ -18,12 +14,10 @@ import com.spleefleague.core.player.rank.CoreTempRank;
 import com.spleefleague.coreapi.database.annotation.DBField;
 import com.spleefleague.coreapi.utils.packet.bungee.player.PacketBungeePlayerResync;
 import com.spleefleague.coreapi.utils.packet.spigot.player.PacketSpigotPlayerRank;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -49,7 +43,7 @@ public class CoreOfflinePlayer extends CoreDBPlayer {
     @DBField protected Long activeTime = 0L;
     @DBField protected Long battleTime = 0L;
 
-    private TextComponent chatName, chatNamePossessive, chatNameRanked;
+    private Component chatName, chatNamePossessive, chatNameRanked;
     private String rankedDisplayName, menuName, displayName, displayNamePossessive;
 
     /**
@@ -117,14 +111,11 @@ public class CoreOfflinePlayer extends CoreDBPlayer {
         displayNamePossessive = displayName + "'s";
         rankedDisplayName = (getRank() != null ? getRank().getDisplayName() + com.spleefleague.coreapi.chat.Chat.SPACE_1 : "") + displayName;
 
-        chatName = new TextComponent(getRank().getColor() + username);
-        chatName.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tell " + username + " "));
+        chatName = Component.text(getRank().getColor() + username).clickEvent(ClickEvent.suggestCommand("/tell " + username + " "));
 
-        chatNamePossessive = new TextComponent(getRank().getColor() + username + "'s");
-        chatNamePossessive.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tell " + username + " "));
+        chatNamePossessive = Component.text(getRank().getColor() + username + "'s").clickEvent(ClickEvent.suggestCommand("/tell " + username + " "));
 
-        chatNameRanked = new TextComponent(getRank().getChatTag() + getRank().getColor() + username);
-        chatNameRanked.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tell " + username + " "));
+        chatNameRanked = Component.text(getRank().getChatTag() + getRank().getColor() + username).clickEvent(ClickEvent.suggestCommand("/tell " + username + " "));
     }
 
     public boolean isFlying() {
@@ -180,22 +171,22 @@ public class CoreOfflinePlayer extends CoreDBPlayer {
     /**
      * @return Name of player as TextComponent to allow for quick /tell
      */
-    public TextComponent getChatName() {
-        return (TextComponent) chatName.duplicate();
+    public Component getChatName() {
+        return chatName;
     }
 
     /**
      * @return Name of player as TextComponent to allow for quick /tell
      */
-    public TextComponent getChatNamePossessive() {
-        return (TextComponent) chatNamePossessive.duplicate();
+    public Component getChatNamePossessive() {
+        return chatNamePossessive;
     }
 
     /**
      * @return Name of player as TextComponent to allow for quick /tell
      */
-    public TextComponent getChatNameRanked() {
-        return (TextComponent) chatNameRanked.duplicate();
+    public Component getChatNameRanked() {
+        return chatNameRanked;
     }
 
     /**

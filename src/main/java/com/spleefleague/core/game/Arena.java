@@ -17,7 +17,7 @@ import com.spleefleague.core.util.variable.Dimension;
 import com.spleefleague.core.util.variable.Position;
 import com.spleefleague.core.world.build.BuildStructure;
 import com.spleefleague.core.world.build.BuildStructures;
-import com.spleefleague.core.world.game.GameWorld;
+import com.spleefleague.core.world.projectile.game.GameWorld;
 
 import java.util.ArrayList;
 import java.util.HashSet;
