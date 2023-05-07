@@ -15,7 +15,9 @@ import com.spleefleague.core.world.build.BuildWorld;
 import com.spleefleague.core.world.projectile.global.GlobalWorld;
 import com.spleefleague.core.util.PacketUtils;
 import com.spleefleague.coreapi.database.variable.DBPlayer;
+import net.minecraft.core.EnumDirection;
 import net.minecraft.network.protocol.game.PacketPlayInUseItem;
+import net.minecraft.world.phys.MovingObjectPositionBlock;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
@@ -97,19 +99,14 @@ public abstract class FakeWorld<FWP extends FakeWorldPlayer> {
             public void onPacketReceiving(PacketEvent event) {
                 CorePlayer cp = Core.getInstance().getPlayers().get(event.getPlayer());
                 if (cp == null) return;
-                BlockPosition blockPosition = event.getPacket().getBlockPositionModifier().read(0);
-                int hand = event.getPacket().getIntegers().read(0);
-                int face = event.getPacket().getIntegers().read(1);
-                /*
-                ServerboundUseItemOnPacket packet = (ServerboundUseItemOnPacket) event.getPacket().getHandle();
-                BlockPos bp = packet.getHitResult().getBlockPos();
-                Direction direction = packet.getHitResult().getDirection();
-                BlockPos br = bp.relative(direction);
-                BlockPosition blockPosition = new BlockPosition(bp.getX(), bp.getY(), bp.getZ());
-                BlockPosition blockRelative = new BlockPosition(br.getX(), br.getY(), br.getZ());
-                 */
 
-                BlockPosition blockRelative = blockPosition.add(new BlockPosition(0, 1, 0));
+                PacketPlayInUseItem packet = (PacketPlayInUseItem) event.getPacket().getHandle();
+                MovingObjectPositionBlock positionBlock = packet.c();
+                net.minecraft.core.BlockPosition nmsBlockPosition = positionBlock.a();
+                EnumDirection direction = positionBlock.b();
+                net.minecraft.core.BlockPosition nmsBlockRelative = nmsBlockPosition.a(direction);
+                BlockPosition blockPosition = new BlockPosition(nmsBlockPosition.u(), nmsBlockPosition.v(), nmsBlockPosition.w());
+                BlockPosition blockRelative = new BlockPosition(nmsBlockRelative.u(), nmsBlockRelative.v(), nmsBlockRelative.w());
 
                 Iterator<FakeWorld<?>> fit = cp.getFakeWorlds();
                 while (fit.hasNext()) {

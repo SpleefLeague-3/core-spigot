@@ -116,7 +116,7 @@ public class ProjectileWorld<PWP extends ProjectileWorldPlayer> extends FakeWorl
                 .getDeclaredConstructor(ProjectileWorld.class, CorePlayer.class, Location.class, ProjectileStats.class, Double.class)
                 .newInstance(this, shooter, location, projectileStats, charge);
         projectiles.put(entity.getBukkitEntity().getUniqueId(), new GameProjectile(entity, projectileStats));
-        ((CraftWorld) getWorld()).getHandle().addFreshEntity(entity, CreatureSpawnEvent.SpawnReason.CUSTOM);
+        ((CraftWorld) getWorld()).getHandle().addFreshEntity(entity, CreatureSpawnEvent.SpawnReason.DEFAULT);
         entities.add(entity);
         return entity;
     }

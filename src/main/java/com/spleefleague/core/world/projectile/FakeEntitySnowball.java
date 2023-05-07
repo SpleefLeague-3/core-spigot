@@ -56,6 +56,7 @@ public class FakeEntitySnowball extends EntitySnowball implements FakeEntity {
         ((Snowball) getBukkitEntity()).setItem(projectileStats.getItem());
         ((Snowball) getBukkitEntity()).setShooter(shooter.getPlayer());
         getBukkitEntity().setGravity(projectileStats.gravity);
+        p(handLocation.getX(), handLocation.getY(), handLocation.getZ());
 
         Random rand = new Random();
         Location lookLoc = location.clone();
@@ -193,16 +194,18 @@ public class FakeEntitySnowball extends EntitySnowball implements FakeEntity {
 
     @Override
     public void ao() {
+        super.ao();
+
         if (getBukkitEntity().getTicksLived() > lifeTicks) {
             getBukkitEntity().remove();
             return;
         }
         Location currentLocation = getBukkitEntity().getLocation();
-        Vector center = previousLocation.toVector();
-        Vector direction = currentLocation.toVector().subtract(center);
-        getBukkitEntity().setVelocity(direction.clone().multiply(projectileStats.drag));
-
         if (previousLocation != null) {
+            Vector center = previousLocation.toVector();
+            Vector direction = currentLocation.toVector().subtract(center);
+            //getBukkitEntity().setVelocity(direction.clone().multiply(projectileStats.drag));
+
             if (stuck != null) {
                 FakeBlock fb = projectileWorld.getFakeBlock(stuck);
                 if ((fb == null || !fb.blockData().getMaterial().isSolid()) &&
@@ -219,7 +222,6 @@ public class FakeEntitySnowball extends EntitySnowball implements FakeEntity {
                 checkBlockHit(direction);
             }
         }
-
         previousLocation = currentLocation;
     }
 
