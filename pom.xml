@@ -141,16 +141,6 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <relocations>
-                                <relocation>
-                                    <pattern>org.bukkit.craftbukkit</pattern>
-                                    <shadedPattern>com.spleefleague.shaded.org.bukkit.craftbukkit</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.spigotmc</pattern>
-                                    <shadedPattern>com.spleefleague.shaded.org.spigotmc</shadedPattern>
-                                </relocation>
-                            </relocations>
                         </configuration>
                     </execution>
                 </executions>

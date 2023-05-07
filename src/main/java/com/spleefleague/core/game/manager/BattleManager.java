@@ -30,24 +30,13 @@ public abstract class BattleManager {
      * @return New Battle Manager
      */
     public static BattleManager createManager(BattleMode mode) {
-        BattleManager bm = null;
-        switch (mode.getTeamStyle()) {
-            case SOLO:
-                bm = new BattleManagerSolo(mode);
-                break;
-            case TEAM:
-                bm = new BattleManagerTeam(mode);
-                break;
-            case DYNAMIC:
-                bm = new BattleManagerDynamic(mode);
-                break;
-            case VERSUS:
-                bm = new BattleManagerVersus(mode);
-                break;
-            case BONANZA:
-                bm = new BattleManagerBonanza(mode);
-                break;
-        }
+        BattleManager bm = switch (mode.getTeamStyle()) {
+            case SOLO -> new BattleManagerSolo(mode);
+            case TEAM -> new BattleManagerTeam(mode);
+            case DYNAMIC -> new BattleManagerDynamic(mode);
+            case VERSUS -> new BattleManagerVersus(mode);
+            case BONANZA -> new BattleManagerBonanza(mode);
+        };
         bm.init();
         return bm;
     }
